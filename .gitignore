@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.output/
+.nuxt/
+**/.vitepress/cache/
+coverage/
+*.tsbuildinfo
+.DS_Store

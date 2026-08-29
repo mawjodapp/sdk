@@ -1,0 +1,41 @@
+{
+  "name": "@mawjod/nuxt",
+  "version": "0.1.0",
+  "description": "Nuxt 4 module for the Mawjod storefront API.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/types.d.mts",
+      "import": "./dist/module.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/module.mjs",
+  "types": "./dist/types.d.mts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "nuxt-module-build build",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mawjod/api": "workspace:*",
+    "@nuxt/kit": "^4.2.1"
+  },
+  "devDependencies": {
+    "@nuxt/module-builder": "^1.0.2",
+    "@nuxt/schema": "^4.2.1",
+    "nuxt": "^4.2.1",
+    "typescript": "^5.9.3",
+    "vue": "^3.5.24"
+  },
+  "peerDependencies": {
+    "nuxt": "^4.0.0"
+  }
+}

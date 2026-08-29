@@ -1,0 +1,3 @@
+# Anything a container or CI shell runs must keep LF endings. A checkout on Windows would
+# otherwise give them CRLF, and the failure names neither the file nor the cause.
+* text=auto eol=lf
