@@ -27,8 +27,9 @@ pnpm add @mawjod/api
 
 ## Installing from a sibling checkout
 
-Until the packages are published, a theme installs them from a local clone of the SDK sitting next
-to it. That takes three things, and skipping the third fails.
+Both packages are on the npm registry, so this is a choice, not a requirement. Install from a local
+clone when you are developing against the SDK itself and want its changes without waiting for a
+release. That takes three things, and skipping the third fails.
 
 Build the SDK first. Both packages resolve to `dist/`, which is not committed, so a fresh clone has
 nothing for the consumer to link against:
