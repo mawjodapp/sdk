@@ -5,6 +5,7 @@ export default defineConfig({
   description: 'Client libraries for building Mawjod storefront themes.',
   lang: 'en-US',
   cleanUrls: true,
+  base: '/sdk/',
   themeConfig: {
     nav: [
       { text: 'Guide', link: '/guide/getting-started', activeMatch: '/guide/' },

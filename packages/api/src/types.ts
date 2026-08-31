@@ -7,8 +7,8 @@
  */
 
 /**
- * Money is always integer minor units plus a currency. Never a float — a float cannot represent
- * a piastre and the API never sends one.
+ * Money is always integer minor units plus a currency. Never a float: a float cannot represent a
+ * piastre and the API never sends one.
  *
  * `tax_inclusive` is currently always `true` for this deployment; it is carried anyway because the
  * server states it rather than leaving it implied.
@@ -231,7 +231,7 @@ export interface ProductAttribute {
   key: string
   /** Localized display name. */
   name: string
-  /** e.g. `option`, `text`, `number`, `boolean`. Open — do not union. */
+  /** e.g. `option`, `text`, `number`, `boolean`. Open, so do not union. */
   type: string
   /**
    * Source-verified: string | int | bool | null on the server.
@@ -243,7 +243,7 @@ export interface ProductAttribute {
   value: string | number | boolean | null
 }
 
-/** `GET /catalog/products/{slug}` — the summary plus the fields only the detail view carries. */
+/** `GET /catalog/products/{slug}`: the summary plus the fields only the detail view carries. */
 export interface Product extends ProductSummary {
   description: string | null
   /**
@@ -344,7 +344,7 @@ export interface CartAdjustment {
 }
 
 export interface Cart {
-  /** `null` when the caller has no cart yet — the API answers a zeroed cart rather than a 404. */
+  /** `null` when the caller has no cart yet. The API answers a zeroed cart rather than a 404. */
   id: string | null
   status: string
   is_guest: boolean
@@ -649,7 +649,7 @@ export interface Order {
 
 /**
  * A short-lived, single-use provider redirect. Never persisted server-side, so it cannot be
- * re-read — start a new session instead. Nothing settles here; only the provider's signed webhook
+ * re-read: start a new session instead. Nothing settles here; only the provider's signed webhook
  * marks a payment paid.
  */
 export interface PaymentSession {
@@ -767,7 +767,7 @@ export interface Return {
   order_id: string
   order_number: string | null
   customer: CustomerRef
-  /** The window as it stood when the return was opened — the answer to "how long did I have". */
+  /** The window as it stood when the return was opened: the answer to "how long did I have". */
   policy: ReturnPolicy
   refundable: ReturnRefundable
   requested_at: string

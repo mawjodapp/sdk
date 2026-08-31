@@ -108,7 +108,7 @@ Checkout is protected by two values that must travel together:
 
 | Value | Where it goes | What it is |
 | --- | --- | --- |
-| `Idempotency-Key` | request header | 16–128 printable ASCII characters. A UUIDv7 is a fine choice. |
+| `Idempotency-Key` | request header | 16 to 128 printable ASCII characters. A UUIDv7 is a fine choice. |
 | `operation_id` | request body | UUIDv7. It also identifies the stock reservation for this attempt. |
 
 The client generates both when you do not supply them, and returns them on `CheckoutResult` so you

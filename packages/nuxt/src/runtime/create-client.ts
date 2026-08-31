@@ -37,15 +37,13 @@ export interface CreateNuxtMawjodClientOptions {
  * stays a thin reader of `runtimeConfig` and request state.
  */
 export function createNuxtMawjodClient(options: CreateNuxtMawjodClientOptions): MawjodClient {
-  const forwarded = options.forwardHeaders
-
   return createMawjodClient({
     baseUrl: options.apiBase,
 
     // A function, not a static object: it runs per request, which is what lets `useMawjodLocale()`
     // change the locale after the client was built.
     headers: () => {
-      const headers: Record<string, string> = { ...forwarded }
+      const headers: Record<string, string> = { ...options.forwardHeaders }
       const locale = options.locale?.()
 
       if (locale !== null && locale !== undefined && locale !== '') {

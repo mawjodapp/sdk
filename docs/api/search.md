@@ -37,10 +37,10 @@ type SearchProductsQuery = {
 | `q` | Arabic or English, up to 120 characters. An exact SKU or barcode ranks first. |
 | `category_id` | A **UUID**, not a slug |
 | `brand_id` | A **UUID**, not a slug |
-| `min_price_minor` | 0–1,000,000,000, in minor units |
-| `max_price_minor` | 0–1,000,000,000, in minor units |
-| `page` | 1–100 |
-| `per_page` | 1–60, default 20 |
+| `min_price_minor` | 0 to 1,000,000,000, in minor units |
+| `max_price_minor` | 0 to 1,000,000,000, in minor units |
+| `page` | 1 to 100 |
+| `per_page` | 1 to 60, default 20 |
 
 The UUIDs for `category_id` and `brand_id` come from
 [`catalog.categories.list()`](/api/catalog#catalog-categories-list) and

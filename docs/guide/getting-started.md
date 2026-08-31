@@ -37,7 +37,7 @@ createMawjodClient(options: MawjodClientOptions): MawjodClient
 
 | Option | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `baseUrl` | `string` | — | Required. Origin of the deployment, e.g. `http://localhost:8000`. |
+| `baseUrl` | `string` | none | Required. Origin of the deployment, e.g. `http://localhost:8000`. |
 | `fetch` | `typeof fetch` | the platform's | Override the fetch implementation. |
 | `headers` | `HeadersInit \| (() => HeadersInit \| Promise<HeadersInit>)` | none | Extra headers on every request. Pass a function to compute them per request; that is how an SSR consumer forwards the incoming `Cookie`. |
 | `locale` | `'ar' \| 'en' \| string` | none | Sent as `Accept-Language`. A per-call header wins over it. |

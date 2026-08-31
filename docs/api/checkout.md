@@ -104,7 +104,7 @@ Two values travel together and must both be reused for a replay:
 
 | Value | Where | What |
 | --- | --- | --- |
-| `Idempotency-Key` | header | 16–128 printable ASCII characters |
+| `Idempotency-Key` | header | 16 to 128 printable ASCII characters |
 | `operation_id` | body | UUIDv7; also the stock-reservation identity |
 
 The server hashes the key against exactly these fields:

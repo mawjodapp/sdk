@@ -2,7 +2,7 @@
  * Mawjod answers failures with `application/problem+json` (RFC 7807) and adds two fields the
  * client is expected to use: `code` and `request_id`.
  *
- * Branch on `code`. Never on `detail` — `detail` is prose written for a person and is reworded
+ * Branch on `code`, never on `detail`. `detail` is prose written for a person and is reworded
  * without notice.
  */
 export interface ProblemDocument {
@@ -132,7 +132,7 @@ export type PayloadIntegrityResource = 'order' | 'return' | 'search_hit'
  *
  * An order or a return is created from at least one line, so an empty `lines` array is a lost
  * payload rather than an empty state. Rendering it would show a buyer an order that appears to
- * contain nothing, at two hundred, with a valid body — and nothing downstream could tell.
+ * contain nothing, with a 200 status and a valid body, and nothing downstream could tell.
  *
  * A search hit with an empty `slug` is the same kind of failure wearing different clothes: the
  * shape typechecks and the content is hollow, so the row renders as a product nobody can open.
@@ -233,7 +233,7 @@ export function isCheckoutError(
 
 /**
  * The subset of checkout failures that mean the cart no longer matches what the buyer was shown.
- * Refetch the cart, show what changed, and ask the buyer to confirm — do not retry silently.
+ * Refetch the cart, show what changed, and ask the buyer to confirm. Do not retry silently.
  */
 export function isStaleCartError(
   error: unknown,

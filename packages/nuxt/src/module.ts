@@ -16,7 +16,7 @@ export interface ModuleOptions {
    * `422 validation_failed` for anything else; the type stays open so a deployment that gains a
    * locale does not need a new SDK release.
    *
-   * This is only the starting value — `useMawjodLocale()` changes it at runtime.
+   * This is only the starting value; `useMawjodLocale()` changes it at runtime.
    */
   locale?: 'ar' | 'en' | (string & {})
 }
@@ -53,7 +53,7 @@ export default defineNuxtModule<ModuleOptions>({
     if (resolved.apiBase === '') {
       logger.warn(
         'No `mawjod.apiBase` is configured. Set it in nuxt.config, or supply ' +
-          '`NUXT_PUBLIC_MAWJOD_API_BASE` at boot — the client refuses to be built without one.',
+          '`NUXT_PUBLIC_MAWJOD_API_BASE` at boot. The client refuses to be built without one.',
       )
     }
 

@@ -19,9 +19,8 @@ export interface ImageSrcSet {
  *
  * Release one: `renditions` is an empty map on every public image. There is no encoder yet, and the
  * media processor only publishes rendition urls for a processor that reports it produces renderable
- * images, so the map is empty rather than full of urls that are not pictures. This helper then
- * returns the original url and an empty `srcset`, which browsers ignore, so binding it renders the
- * original and nothing else.
+ * images, so the map is empty rather than full of urls that are not pictures. Binding this helper
+ * today renders the original and nothing else.
  *
  * That is the same path a partially generated image takes, so it needs no special case in a theme.
  * When a real encoder ships the map repopulates and `srcset` starts working, with no change here

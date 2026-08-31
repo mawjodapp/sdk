@@ -24,7 +24,7 @@ export interface MawjodClientOptions {
   fetch?: typeof globalThis.fetch
 
   /**
-   * Extra headers for every request. Pass a function to compute them per request — that is how an
+   * Extra headers for every request. Pass a function to compute them per request: that is how an
    * SSR consumer forwards the incoming `Cookie` header.
    */
   headers?: HeadersOption
@@ -36,8 +36,8 @@ export interface MawjodClientOptions {
    * `accept_language` field error for anything else. The type stays open so a deployment that
    * gains a locale does not need a new SDK release.
    *
-   * It is a default, not a rule: a header passed through `headers` — or by a call that sets its
-   * own — wins over it.
+   * It is a default, not a rule. A header passed through `headers`, or by a call that sets its
+   * own, wins over it.
    */
   locale?: 'ar' | 'en' | (string & {})
 
@@ -71,19 +71,18 @@ export interface MawjodClient {
 /**
  * Builds a client for one Mawjod deployment.
  *
- * Every request sends `credentials: 'include'` — identity is a Sanctum session cookie and there is
- * no bearer token anywhere in this API. Writes bootstrap and echo the CSRF token on their own.
+ * Every request sends `credentials: 'include'`, because identity is a Sanctum session cookie and
+ * there is no bearer token anywhere in this API. Writes bootstrap and echo the CSRF token on their
+ * own.
  */
 export function createMawjodClient(options: MawjodClientOptions): MawjodClient {
   if (typeof options.baseUrl !== 'string' || options.baseUrl === '') {
     throw new Error('createMawjodClient needs a baseUrl, e.g. "http://localhost:8000".')
   }
 
-  const fetchImpl = options.fetch ?? resolveFetch()
-
   const transport = new Transport({
     baseUrl: options.baseUrl,
-    fetch: fetchImpl,
+    fetch: options.fetch ?? resolveFetch(),
     headers: options.headers,
     locale: options.locale,
     onError: options.onError,

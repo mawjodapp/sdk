@@ -46,7 +46,7 @@ type CatalogProductsQuery = {
 | Field | Notes |
 | --- | --- |
 | `page.number` | ≥ 1, default 1 |
-| `page.size` | 1–100, default 20 |
+| `page.size` | 1 to 100, default 20 |
 | `sort` | `published_at` or `created_at`, optionally `-` prefixed. An array joins with commas. |
 | `filter.category` | An active category **slug** |
 | `filter.brand` | An active brand **slug** |
@@ -290,7 +290,7 @@ type CatalogTaxonomyQuery = {
 | Field | Notes |
 | --- | --- |
 | `page.number` | ≥ 1, default 1 |
-| `page.size` | 1–100, default 20 |
+| `page.size` | 1 to 100, default 20 |
 | `sort` | `created_at` or `-created_at`. There is no other key. |
 
 ### Sorting by name is not a thing

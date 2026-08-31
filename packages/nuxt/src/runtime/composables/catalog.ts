@@ -54,7 +54,7 @@ export function useProduct(slug: MaybeRefOrGetter<string>, options: MawjodAsyncO
  * derived from the query's *initial* shape.
  *
  * The server sorts by `created_at` only, so a nav orders itself: sort the rows by `name` with
- * `localeCompare` in the locale you are rendering. The list is flat — categories have no hierarchy.
+ * `localeCompare` in the locale you are rendering. The list is flat: categories have no hierarchy.
  *
  * Rows are `CategoryListItem`: a `Category` plus an `image`, which is `null` when the category has
  * no picture. The `category` on a product summary is a plain `Category` and never carries one.

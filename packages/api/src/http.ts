@@ -54,7 +54,7 @@ export class Transport {
   }
 
   /**
-   * `data` plus `meta`. Used where the request id has to survive into an error the caller sees —
+   * `data` plus `meta`. Used where the request id has to survive into an error the caller sees:
    * the payload integrity guard, in practice.
    */
   async dataWithMeta<T>(spec: RequestSpec): Promise<{ data: T; meta: ApiMeta | null }> {
@@ -92,7 +92,7 @@ export class Transport {
     }
   }
 
-  /** A bare `data: []` collection — addresses and pickup locations are not paginated. */
+  /** A bare `data: []` collection. Addresses and pickup locations are not paginated. */
   async array<T>(spec: RequestSpec): Promise<T[]> {
     const { items } = await this.collection<T>(spec)
 
@@ -293,7 +293,7 @@ export class Transport {
   /**
    * Bootstraps the CSRF cookie before the first unsafe request, once.
    *
-   * When a token is already readable the network call is skipped — a stale one self-heals through
+   * When a token is already readable the network call is skipped. A stale one self-heals through
    * the 419 retry above, which is cheaper than a round trip before every session's first write.
    */
   private async ensureCsrf(force: boolean): Promise<void> {

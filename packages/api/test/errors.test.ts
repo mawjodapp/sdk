@@ -68,7 +68,7 @@ describe('error mapping', () => {
 
     const error = await client.store.get().catch((thrown: unknown) => thrown)
 
-    // No `code`, no `request_id` — there is nothing to branch on, so it must not masquerade as one.
+    // No `code`, no `request_id`: there is nothing to branch on, so it must not masquerade as one.
     expect(error).toBeInstanceOf(MawjodNetworkError)
     expect(isMawjodApiError(error)).toBe(false)
     expect((error as MawjodNetworkError).status).toBe(502)

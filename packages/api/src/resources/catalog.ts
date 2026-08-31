@@ -32,9 +32,9 @@ export type CatalogProductsQuery = {
 export type CatalogTaxonomyQuery = {
   page?: { number?: number | null; size?: number | null } | null
   /**
-   * `created_at` only, optionally `-` prefixed. `sort=name` is a 422 — a name only exists inside a
-   * locale, so the server refuses to sort by one. Order by name client-side, in the locale you are
-   * rendering; that is the intended pattern for a nav.
+   * `created_at` only, optionally `-` prefixed. `sort=name` is a 422, because a name only exists
+   * inside a locale, so the server refuses to sort by one. Order by name client-side, in the locale
+   * you are rendering; that is the intended pattern for a nav.
    */
   sort?: 'created_at' | '-created_at' | null
 }

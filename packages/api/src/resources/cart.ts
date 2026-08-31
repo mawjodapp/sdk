@@ -16,7 +16,7 @@ export interface CartNamespace {
   quote(): Promise<CartQuote>
   /**
    * Adds a variant, creating the cart when there is none. For a guest this is the response that
-   * issues `guest_token` — the client captures it automatically and sends it as
+   * issues `guest_token`. The client captures it automatically and sends it as
    * `X-Mawjod-Cart-Token` from here on.
    */
   addLine(input: AddCartLineInput): Promise<Cart>
@@ -29,9 +29,9 @@ export interface CartNamespace {
    * Merges the guest cart into the signed-in customer's cart. Additive and deterministic:
    * identical lines sum, guest-only lines move across, replaying the same token merges once.
    *
-   * Defaults to the stored guest token. On success the stored token is cleared — the guest cart is
-   * gone and replaying a dead token would be noise. Note the contract inconsistency: every other
-   * cart call carries the token in a header, this one takes it in the body.
+   * Defaults to the stored guest token. On success the stored token is cleared, because the guest
+   * cart is gone and replaying a dead token would be noise. Note the contract inconsistency: every
+   * other cart call carries the token in a header, this one takes it in the body.
    */
   merge(guestToken?: string): Promise<Cart>
 }

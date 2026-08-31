@@ -21,14 +21,14 @@ export interface UseCheckoutReturn {
   /**
    * Set when the attempt failed with `cart_price_changed`, `cart_not_purchasable` or
    * `insufficient_stock`: the world moved under the buyer. Refetch the cart, show what changed and
-   * ask them to confirm — do not retry silently.
+   * ask them to confirm. Do not retry silently.
    */
   staleCart: Ref<(MawjodApiError & { code: StaleCartErrorCode }) | null>
   isStale: ComputedRef<boolean>
   pending: Ref<boolean>
   error: Ref<unknown>
   place: (input: CheckoutInput, options?: { idempotencyKey?: string }) => Promise<CheckoutResult>
-  /** Replays the last attempt with the same key pair — the server replays, it does not re-charge. */
+  /** Replays the last attempt with the same key pair. The server replays; it does not re-charge. */
   retry: (input?: CheckoutInput) => Promise<CheckoutResult>
   reset: () => void
 }
@@ -39,7 +39,7 @@ export interface UseCheckoutReturn {
  * The idempotency pair is generated here, before the call, rather than being read off a successful
  * response: an attempt that fails is exactly the one that needs to be retried under the same key.
  * The server pins the key to `{operation_id, fulfillment_method, payment_method, address_id,
- * pickup_location_id, expected_items_subtotal_minor}` — reuse the key with different values and it
+ * pickup_location_id, expected_items_subtotal_minor}`. Reuse the key with different values and it
  * answers a conflict, not a replay. `retry()` therefore replays the stored input by default.
  */
 export function useCheckout(): UseCheckoutReturn {

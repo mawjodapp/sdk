@@ -45,7 +45,7 @@ export interface OrdersNamespace {
   cancel(orderId: string, input: CancelOrderInput): Promise<Order>
   /**
    * Starts or resumes a provider payment session and returns a short-lived, single-use redirect.
-   * Nothing settles here — only the provider's signed webhook marks a payment paid.
+   * Nothing settles here: only the provider's signed webhook marks a payment paid.
    */
   pay(orderId: string, input?: PayOrderInput): Promise<PaymentSession>
 }

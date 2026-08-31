@@ -65,12 +65,12 @@ Verified against a live deployment, not inferred from the code:
   so nothing goes out over any channel, and the setting that reads like it controls delivery
   changes nothing.
 - The code is unreadable by anyone. It is hashed at rest, so it cannot be read back out of the
-  database, out of a log, or out of any response.
+  database, a log, or a response.
 - `checkout.place()` answers `403 customer_not_verified` until the identity is verified.
 
-Therefore a new customer cannot verify their identity, and therefore cannot place a first order,
-from the documented client surface. There is no theme-side workaround: the six-digit code that
-`verify()` requires exists nowhere a person can reach.
+So a new customer cannot verify their identity, and cannot place a first order, from the documented
+client surface. There is no theme-side workaround: the six-digit code that `verify()` requires
+exists nowhere a person can reach.
 
 The backend team has the report. The fix is theirs, and whether release one ships in this state is
 an owner decision. Everything below describes the call as it is specified and as it will behave

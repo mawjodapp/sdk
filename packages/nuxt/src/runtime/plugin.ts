@@ -5,9 +5,9 @@ import { createNuxtMawjodClient } from './create-client'
 import { useMawjodLocaleState, useMawjodPublicConfig, useStoreAvailabilityState } from './internal'
 
 /**
- * One `@mawjod/api` client per Nuxt app instance — per request on the server, per page load in the
- * browser. Never a module-scope singleton: on the server that would share one visitor's forwarded
- * cookies with the next visitor's request.
+ * One `@mawjod/api` client per Nuxt app instance: per request on the server, per page load in the
+ * browser. Never a module-scope singleton, because on the server that would share one visitor's
+ * forwarded cookies with the next visitor's request.
  */
 export default defineNuxtPlugin({
   name: 'mawjod',

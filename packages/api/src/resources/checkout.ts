@@ -40,8 +40,8 @@ export interface CheckoutOptions {
 export interface CheckoutResult {
   order: Order
   /**
-   * The key that was sent. Retry with this exact value — and the same `operationId` and the same
-   * input — to replay rather than place a second order.
+   * The key that was sent. Retry with this exact value, the same `operationId` and the same input,
+   * to replay rather than place a second order.
    */
   idempotencyKey: string
   operationId: string

@@ -1,5 +1,5 @@
 /**
- * `@mawjod/api` — a zero-dependency client for the Mawjod storefront API.
+ * `@mawjod/api`: a zero-dependency client for the Mawjod storefront API.
  *
  * Everything is exported from here. There is no default export.
  */

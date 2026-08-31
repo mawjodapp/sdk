@@ -1,7 +1,7 @@
 /**
  * A guest cart is addressed by the `X-Mawjod-Cart-Token` header, not by the session cookie.
  *
- * The token comes back exactly once — in the 201 that creates the cart — and every later response
+ * The token comes back exactly once, in the 201 that creates the cart, and every later response
  * carries `guest_token: null`. It is not recoverable from the server. Lose it and the cart is
  * unreachable, so the client captures it on sight and stores it.
  */

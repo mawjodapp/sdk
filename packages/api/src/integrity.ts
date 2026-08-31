@@ -2,9 +2,9 @@ import { PayloadIntegrityError } from './errors.js'
 import type { ApiMeta, Order, Return, SearchProductHit } from './types.js'
 
 /**
- * An order or a return always has at least one line — the server creates neither without one.
- * So `lines: []` is not an empty state; it is a payload that lost its lines somewhere between the
- * database and here, arriving as a well-formed 200.
+ * An order or a return always has at least one line, because the server creates neither without
+ * one. So `lines: []` is not an empty state; it is a payload that lost its lines somewhere between
+ * the database and here, arriving as a well-formed 200.
  *
  * Rendering that shows a buyer an order that appears to contain nothing. Failing loudly, carrying
  * the request id, is the only honest option.

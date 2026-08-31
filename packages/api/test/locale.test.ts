@@ -23,7 +23,7 @@ describe('locale', () => {
       headers: { 'Accept-Language': 'en' },
     })
     await overridden.client.store.get()
-    // `locale` is a default. A header the caller supplied wins — reversed precedence would
+    // `locale` is a default. A header the caller supplied wins. Reversed precedence would
     // answer 'ar' here and silently serve the wrong language.
     expect(overridden.calls[0]!.headers.get('Accept-Language')).toBe('en')
   })

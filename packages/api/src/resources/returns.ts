@@ -66,7 +66,7 @@ export interface ReturnsNamespace {
   list(query?: ReturnsQuery): Promise<Paginated<Return>>
   get(returnId: string): Promise<Return>
   /**
-   * Requests a return. No money fields are accepted — the refund value is recomputed from the
+   * Requests a return. No money fields are accepted: the refund value is recomputed from the
    * frozen order-line snapshot. Past the window this is `409 return_window_closed`.
    */
   create(input: CreateReturnInput): Promise<Return>

@@ -5,9 +5,9 @@
  * unmodified against a small, honest model of the four Nuxt primitives they use: an app instance,
  * a runtime config, keyed shared state, and the incoming request's headers.
  *
- * It models behaviour the tests actually depend on — `useState` returning the *same* ref for the
- * same key, `defineNuxtPlugin` returning a callable, `useRequestHeaders` narrowing to the keys it
- * was asked for — and nothing else.
+ * It models the behaviour the tests actually depend on and nothing else: `useState` returning the
+ * *same* ref for the same key, `defineNuxtPlugin` returning a callable, and `useRequestHeaders`
+ * narrowing to the keys it was asked for.
  */
 import { computed, ref, type Ref, shallowRef } from 'vue'
 

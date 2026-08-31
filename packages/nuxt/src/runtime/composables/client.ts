@@ -7,14 +7,14 @@ import { useMawjodLocaleState, useMawjodNuxtApp } from '../internal'
  * The raw `@mawjod/api` client for this Nuxt app instance.
  *
  * Every other composable is a thin wrapper over it. When one of them does not fit, reach for this
- * and `useAsyncData` directly — that is the intended escape hatch, not a workaround.
+ * and `useAsyncData` directly. That is the intended escape hatch, not a workaround.
  */
 export function useMawjodApi(): MawjodClient {
   const client = useMawjodNuxtApp().$mawjod
 
   if (client === undefined) {
     throw new Error(
-      '[@mawjod/nuxt] No Mawjod client on this Nuxt app. The module plugin has not run — check ' +
+      '[@mawjod/nuxt] No Mawjod client on this Nuxt app. The module plugin has not run. Check ' +
         'that `@mawjod/nuxt` is in `modules` in nuxt.config.',
     )
   }

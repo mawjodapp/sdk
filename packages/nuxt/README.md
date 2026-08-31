@@ -1,6 +1,6 @@
 # @mawjod/nuxt
 
-Nuxt 4 module for the Mawjod storefront API. Composables only — no components, no styles.
+Nuxt 4 module for the Mawjod storefront API. Composables only: no components, no styles.
 
 ```sh
 pnpm add @mawjod/nuxt @mawjod/api

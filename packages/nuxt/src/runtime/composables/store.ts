@@ -6,14 +6,14 @@ import { useStoreAvailabilityState } from '../internal'
 import type { MawjodAsyncOptions, StoreAvailabilityState } from '../types'
 import { useMawjodApi } from './client'
 
-/** `GET /store` — store identity: id, status, the localized name, and the default locale. */
+/** `GET /store`. Store identity: id, status, the localized name, and the default locale. */
 export function useStoreInfo(options: MawjodAsyncOptions = {}) {
   const api = useMawjodApi()
 
   return useAsyncData<StoreInfo>('mawjod:store', () => api.store.get(), options)
 }
 
-/** `GET /store/settings` — the storefront's operational switches. */
+/** `GET /store/settings`. The storefront's operational switches. */
 export function useStoreSettings(options: MawjodAsyncOptions = {}) {
   const api = useMawjodApi()
 
@@ -30,7 +30,7 @@ export interface UseStoreAvailabilityReturn {
   detail: ComputedRef<string | null>
   /** The request id to quote when reporting the outage. */
   requestId: ComputedRef<string | null>
-  /** Mark the store available again — call it before retrying. */
+  /** Mark the store available again. Call it before retrying. */
   reset: () => void
 }
 

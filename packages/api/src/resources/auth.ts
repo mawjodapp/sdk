@@ -44,8 +44,8 @@ export interface AuthNamespace {
   /**
    * Signs in. Identity rides the session cookie afterwards; there is no token to store.
    *
-   * Wrong password, unknown account and unverified account all answer identically on purpose —
-   * do not try to tell a caller which one it was.
+   * Wrong password, unknown account and unverified account all answer identically on purpose. Do
+   * not try to tell a caller which one it was.
    */
   login(input: LoginInput): Promise<AuthSession>
   verify(input: VerifyInput): Promise<Customer>

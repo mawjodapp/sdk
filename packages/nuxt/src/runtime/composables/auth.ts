@@ -21,7 +21,7 @@ export interface UseCustomerAuthOptions {
    * After a successful login, hand the guest cart to the account that just signed in.
    *
    * On by default: a shopper who filled a cart and then logged in expects to keep it. The merge is
-   * skipped when no guest cart token is stored, and a failing merge never fails the login — the
+   * skipped when no guest cart token is stored, and a failing merge never fails the login. The
    * session is real either way, and the reason lands on `mergeError`.
    */
   mergeCartOnLogin?: boolean
@@ -46,7 +46,7 @@ export interface UseCustomerAuthReturn {
 }
 
 /**
- * Customer sessions. Identity rides a Sanctum session cookie — there are no bearer tokens to hold.
+ * Customer sessions. Identity rides a Sanctum session cookie. There are no bearer tokens to hold.
  *
  * `register()` and `verify()` deliberately do not populate `customer`: neither creates a session.
  */
@@ -81,7 +81,7 @@ export function useCustomerAuth(options: UseCustomerAuthOptions = {}): UseCustom
 
     try {
       // Called on the raw client rather than through `cart.merge()` so a merge failure does not
-      // light up the cart's own error state — the cart itself is fine.
+      // light up the cart's own error state. The cart itself is fine.
       cart.setCart(await api.cart.merge(token))
     } catch (error) {
       mergeError.value = error

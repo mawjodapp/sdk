@@ -3,7 +3,18 @@
   "version": "0.1.0",
   "description": "Nuxt 4 module for the Mawjod storefront API.",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mawjodapp/sdk.git",
+    "directory": "packages/nuxt"
+  },
+  "homepage": "https://mawjodapp.github.io/sdk/",
+  "bugs": "https://github.com/mawjodapp/sdk/issues",
+  "keywords": ["mawjod", "storefront", "ecommerce", "nuxt", "nuxt-module"],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20"
   },

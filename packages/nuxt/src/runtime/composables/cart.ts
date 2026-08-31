@@ -35,7 +35,7 @@ export interface UseCartReturn {
  *
  * The guest cart is identified by `X-Mawjod-Cart-Token`, which `@mawjod/api` captures and replays on
  * its own. On the server that token lives in memory for one request only: guest cart writes during
- * SSR are not a supported path — do them in the browser.
+ * SSR are not a supported path. Do them in the browser.
  */
 export function useCart(): UseCartReturn {
   const api = useMawjodApi()

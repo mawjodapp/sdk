@@ -13,7 +13,7 @@ export const STATE_KEYS = {
   customer: 'mawjod:customer',
 } as const
 
-/** Injected by the plugin. Not part of the public surface — reach for `useMawjodApi()` instead. */
+/** Injected by the plugin. Not part of the public surface; reach for `useMawjodApi()` instead. */
 interface MawjodNuxtApp {
   $mawjod?: MawjodClient
   $mawjodCartTokenStorage?: CartTokenStorage
@@ -32,7 +32,7 @@ export function useMawjodPublicConfig(): MawjodPublicRuntimeConfig {
 }
 
 /**
- * A ref shared across one Nuxt app instance — one SSR request, or one browser page — and never
+ * A ref shared across one Nuxt app instance (one SSR request, or one browser page) and never
  * written to the SSR payload.
  *
  * `useState` is the right home for anything that must survive hydration, but it has to serialize.
@@ -69,7 +69,9 @@ export function useMawjodTask(key: string): MawjodTask {
   }
 }
 
-/** Runs `fn`, tracking it on `task`. The error is recorded *and* rethrown — nothing is swallowed. */
+/**
+ * Runs `fn`, tracking it on `task`. The error is recorded *and* rethrown, so nothing is swallowed.
+ */
 export async function runTask<T>(task: MawjodTask, fn: () => Promise<T>): Promise<T> {
   task.pending.value = true
   task.error.value = null

@@ -55,7 +55,7 @@ export interface CustomerNamespace {
     /** Not paginated. */
     list(): Promise<Address[]>
     create(input: AddressInput): Promise<Address>
-    /** A full replace — every required field must be present, not just the changed ones. */
+    /** A full replace. Every required field must be present, not just the changed ones. */
     update(addressId: string, input: AddressInput): Promise<Address>
     remove(addressId: string): Promise<void>
   }

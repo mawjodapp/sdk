@@ -4,7 +4,18 @@
   "description": "Zero-dependency TypeScript client for the Mawjod storefront API.",
   "type": "module",
   "sideEffects": false,
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mawjodapp/sdk.git",
+    "directory": "packages/api"
+  },
+  "homepage": "https://mawjodapp.github.io/sdk/",
+  "bugs": "https://github.com/mawjodapp/sdk/issues",
+  "keywords": ["mawjod", "storefront", "ecommerce", "api-client", "typescript"],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20"
   },
