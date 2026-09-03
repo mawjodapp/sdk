@@ -5,6 +5,7 @@ import { type AuthNamespace, createAuthNamespace } from './resources/auth.js'
 import { type CartNamespace, createCartNamespace } from './resources/cart.js'
 import { type CatalogNamespace, createCatalogNamespace } from './resources/catalog.js'
 import { type CheckoutNamespace, createCheckoutNamespace } from './resources/checkout.js'
+import { type ContentNamespace, createContentNamespace } from './resources/content.js'
 import { createCustomerNamespace, type CustomerNamespace } from './resources/customer.js'
 import { createFulfillmentNamespace, type FulfillmentNamespace } from './resources/fulfillment.js'
 import { createOrdersNamespace, type OrdersNamespace } from './resources/orders.js'
@@ -58,6 +59,7 @@ export interface MawjodClient {
   store: StoreNamespace
   catalog: CatalogNamespace
   search: SearchNamespace
+  content: ContentNamespace
   cart: CartNamespace
   auth: AuthNamespace
   customer: CustomerNamespace
@@ -93,6 +95,7 @@ export function createMawjodClient(options: MawjodClientOptions): MawjodClient {
     store: createStoreNamespace(transport),
     catalog: createCatalogNamespace(transport),
     search: createSearchNamespace(transport),
+    content: createContentNamespace(transport),
     cart: createCartNamespace(transport),
     auth: createAuthNamespace(transport),
     customer: createCustomerNamespace(transport),

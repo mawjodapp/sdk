@@ -92,7 +92,7 @@ export class Transport {
     }
   }
 
-  /** A bare `data: []` collection. Addresses and pickup locations are not paginated. */
+  /** A bare `data: []` collection. Addresses, pickup locations and content are not paginated. */
   async array<T>(spec: RequestSpec): Promise<T[]> {
     const { items } = await this.collection<T>(spec)
 

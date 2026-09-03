@@ -143,9 +143,12 @@ would charge someone a price they never agreed to.
 | `cart_empty` | 422 | Nothing to order | Send them to the catalogue |
 | `cart_not_found` | 422 | No cart for this caller | Send them to the catalogue |
 | `payment_method_unavailable` | 422 | Method not offered here | Re-read the allowed set |
-| `customer_not_verified` | 403 | Identity not verified | Verification screen, not the cart |
+| `customer_not_verified` | 403 | Identity not verified, where the store requires it | Verification screen, not the cart |
 
 409 means refetch. 422 means rewrite the request. 403 means route to verification.
+
+The 403 only exists on a store that has turned on `auth.customer_verification_required`, which is
+off by default. See [`store.settings()` → Verification](/api/store#verification).
 
 ```ts
 import { isCheckoutError, isStaleCartError } from '@mawjod/api'

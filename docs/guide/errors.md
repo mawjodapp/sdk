@@ -205,6 +205,7 @@ throws for the whole results page, for the same reason a list does.
 | `rate_limited` | 429 | everywhere |
 | `store_unavailable` | 503 | everywhere |
 | `not_found` | 404 | product detail; likely on other by-id reads |
+| `untrusted_host` | 400 | everywhere, refused before the endpoint runs |
 | `variant_not_purchasable` | 409 | `cart.addLine` |
 | `pricing_conflict` | 409 | `cart.applyCoupon` |
 | `cart_price_changed` | 409 | `checkout.place` |
@@ -213,7 +214,7 @@ throws for the whole results page, for the same reason a list does.
 | `cart_empty` | 422 | `checkout.place` |
 | `cart_not_found` | 422 | `checkout.place` |
 | `payment_method_unavailable` | 422 | `checkout.place` |
-| `customer_not_verified` | 403 | `checkout.place` |
+| `customer_not_verified` | 403 | `checkout.place`, on a store that requires verification |
 | `outside_service_area` | 422 | `fulfillment.quotes` |
 | `identity_unavailable` | 422 | `auth.register` |
 | `invalid_identity_challenge` | 422 | `auth.verify`, `auth.resetPassword` |
@@ -225,6 +226,19 @@ throws for the whole results page, for the same reason a list does.
 | `evidence_not_an_image` | 422 | `returns.addEvidence` |
 | `search_unavailable` | 503 | `search.products` |
 | `deployment_not_ready` | 503 | `platform.health.ready` |
+
+`untrusted_host` means the request's `Host` header is not in the deployment's `TRUSTED_HOSTS`. It is
+a proxy or deployment misconfiguration, not something a shopper caused, and no retry clears it. It
+replaces the anonymous `bad_request` that used to come back on a wrong `Host`.
+
+`customer_not_verified` depends on the store: it exists only where
+`auth.customer_verification_required` is on, and that setting is off by default. See
+[Authentication → verification](/guide/authentication#verification).
+
+Three more codes belong to the staff content surface and never reach a storefront:
+`banner_has_no_image` and `slide_has_no_image` when a banner or slide goes live without a stored
+image, and `banner_location_in_use` when a location is deleted while banners still point at it.
+They are in `MawjodErrorCode` because `code` is one vocabulary for the whole API.
 
 ::: info About 404
 Only product detail documents an explicit `404` example. The other by-id reads (an address, an

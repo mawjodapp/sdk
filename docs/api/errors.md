@@ -157,6 +157,7 @@ type MawjodErrorCode =
   | 'store_unavailable'
   | 'rate_limited'
   | 'not_found'
+  | 'untrusted_host'
   | CheckoutErrorCode
   | 'variant_not_purchasable'
   | 'pricing_conflict'
@@ -169,10 +170,27 @@ type MawjodErrorCode =
   | 'return_window_closed'
   | 'return_transition_not_allowed'
   | 'evidence_not_an_image'
+  | 'banner_has_no_image'
+  | 'slide_has_no_image'
+  | 'banner_location_in_use'
   | 'search_unavailable'
   | 'deployment_not_ready'
   | (string & {})
 ```
+
+`customer_not_verified` is conditional. It arrives only from a store that has turned on
+`auth.customer_verification_required`, which is off by default. See
+[`store.settings()` → Verification](/api/store#verification).
+
+`untrusted_host` is a `400` refused before the endpoint ran: the request's `Host` header is not in
+the deployment's `TRUSTED_HOSTS`. It is a deployment or proxy misconfiguration rather than anything
+a shopper did, so it is worth one distinct screen. Nothing a theme retries will clear it.
+
+The three content codes are staff-write refusals: `banner_has_no_image` and `slide_has_no_image`
+when a banner or slide is taken live without a stored public image, and `banner_location_in_use`
+when a location is deleted while banners still reference it. The storefront surface cannot produce
+them. They are in the union because `code` is one vocabulary across the whole API, and a theme that
+shares an error renderer with a staff tool should not fall through to a generic message.
 
 `MawjodErrorCode` is deliberately open. The `(string & {})` member keeps autocomplete for the known
 codes while letting an unrecognized one typecheck: the server may introduce a code at any time, and
@@ -201,8 +219,9 @@ createMawjodClient({
 
 | Status | Meaning here |
 | --- | --- |
+| 400 | `untrusted_host` (the `Host` header is not in `TRUSTED_HOSTS`) |
 | 401 | `unauthenticated` (no session, or it expired) |
-| 403 | `forbidden`, `customer_not_verified` |
+| 403 | `forbidden`, and `customer_not_verified` on a store that requires verification |
 | 404 | `not_found` |
 | 409 | The world moved, or a window closed. Refetch. |
 | 419 | CSRF mismatch. Handled internally: refresh once, replay once. |

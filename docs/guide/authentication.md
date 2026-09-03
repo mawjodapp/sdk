@@ -49,6 +49,8 @@ one the store expects; sending the other is a `422`. The password needs at least
 with letters and numbers.
 
 Registering triggers a verification challenge over whichever channel the store has configured.
+Whether anything depends on that challenge is the store's decision; see
+[Verification](#verification).
 
 ::: warning
 `register()` does not create a session. Neither does `verify()`. Only `login()` does. A theme that
@@ -56,25 +58,32 @@ routes a freshly registered shopper straight to a page that reads `customer.prof
 `401`.
 :::
 
-## Verify
+## Verification
 
-::: danger Verification cannot be completed in release one
-Verified against a live deployment, not inferred from the code:
+Verification is a store setting, `auth.customer_verification_required`, and it is off by default.
+Read it from `store.settings()` and let it decide whether the theme surfaces any verification UX at
+all:
 
-- A verification challenge is recorded and never delivered. The recorder is bound unconditionally,
-  so nothing goes out over any channel, and the setting that reads like it controls delivery
-  changes nothing.
-- The code is unreadable by anyone. It is hashed at rest, so it cannot be read back out of the
-  database, a log, or a response.
-- `checkout.place()` answers `403 customer_not_verified` until the identity is verified.
+```ts
+const { settings } = await mawjod.store.settings()
+const requiresVerification = settings['auth.customer_verification_required']?.value === true
+```
 
-So a new customer cannot verify their identity, and cannot place a first order, from the documented
-client surface. There is no theme-side workaround: the six-digit code that `verify()` requires
-exists nowhere a person can reach.
+Treat a missing key as off.
 
-The backend team has the report. The fix is theirs, and whether release one ships in this state is
-an owner decision. Everything below describes the call as it is specified and as it will behave
-once codes are delivered.
+While it is off, an unverified customer signs in, places orders and resets a password like anyone
+else. `identity.verified_at: null` is a normal state on a live session, not a half-finished
+registration, so do not gate an account page or a checkout button on it.
+
+When a store turns it on, `checkout.place()` answers `403 customer_not_verified` until the identity
+is verified, and login stops distinguishing an unverified account from a wrong password.
+
+::: info How this used to work
+Verification used to be mandatory for every store, and codes were recorded but never delivered over
+any channel, hashed at rest and readable by nobody. A new customer could not clear the check and so
+could not place a first order at all. Making it a setting, off by default, is what removed that
+dead end. If you are reading a theme written against the old behaviour, the verification screen it
+routes to unconditionally is the part to make conditional.
 :::
 
 ```ts
@@ -106,8 +115,9 @@ console.log(session.customer.name)
 
 The response carries the customer, not a token. From here the session cookie is the credential.
 
-Wrong password, unknown account and unverified account all answer identically, on purpose. Do not
-try to tell the shopper which one it was. You cannot, and the server is deliberately not helping.
+Wrong password and unknown account answer identically, on purpose, and so does an unverified
+account on a store that requires verification. Do not try to tell the shopper which one it was. You
+cannot, and the server is deliberately not helping.
 
 If the shopper filled a guest cart before logging in, merge it now. See
 [Cart → merge on login](/guide/cart#merge-on-login).
@@ -162,12 +172,15 @@ server yet. Call `useCustomerProfile()` if you need to know on first render.
 
 ## Verification and checkout
 
-A customer who is signed in but not verified can browse and hold a cart. Checkout refuses with
+On a default store nothing happens here: an unverified customer browses, holds a cart and places an
+order.
+
+On a store with `auth.customer_verification_required` on, checkout refuses with
 `403 customer_not_verified`. Route that to a verification screen, not back to the cart. The cart is
 fine. See [Checkout → failure families](/guide/checkout#failure-families).
 
-In release one that verification screen is a dead end, because no code is ever delivered. See
-[Verify](#verify).
+Handle the code either way. A store can turn the setting on after your theme ships, and the cost of
+handling a `403` that never arrives is one branch.
 
 ## Development setup
 

@@ -54,6 +54,7 @@ export type {
   CatalogTaxonomyQuery,
 } from './resources/catalog.js'
 export type { SearchNamespace, SearchProductsQuery } from './resources/search.js'
+export type { ContentNamespace } from './resources/content.js'
 export type { AddCartLineInput, CartNamespace } from './resources/cart.js'
 export type {
   AuthNamespace,

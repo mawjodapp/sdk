@@ -38,13 +38,19 @@ Send `email` or `phone`, whichever the store's identity mode uses. Sending the o
 `422`.
 
 Registering triggers a verification challenge through whatever channel the store has configured.
+Whether that challenge gates anything is the store's decision, through
+`auth.customer_verification_required`, which is off by default. See
+[`store.settings()` → Verification](/api/store#verification).
 
 ::: warning No session is created
 `register()` does not sign anyone in, and neither does `verify()`. Only `login()` does. Route a
-freshly registered shopper to a verification screen, not to an account page.
+freshly registered shopper to the login page, or to a verification screen when the store requires
+verification, but not to an account page.
 :::
 
-Returns a `Customer` with `identity.verified_at: null`.
+Returns a `Customer` with `identity.verified_at: null`. That stays `null` until the identity is
+verified, and on a store that does not require verification it stays `null` for good without
+blocking anything.
 
 ## `auth.verify()`
 
@@ -52,7 +58,8 @@ Returns a `Customer` with `identity.verified_at: null`.
 verify(input: VerifyInput): Promise<Customer>
 ```
 
-`POST /api/v1/customer/auth/verify`.
+`POST /api/v1/customer/auth/verify`. Offer this screen when the store asks for it; on a default
+store nothing depends on it.
 
 ```ts
 interface VerifyInput {
@@ -97,8 +104,9 @@ interface AuthSession {
 
 There is no token in the response. From here the session cookie carries identity.
 
-Wrong password, unknown account and unverified account all answer `401 unauthenticated`, identically
-and on purpose. Do not try to tell the shopper which one it was.
+Wrong password and unknown account both answer `401 unauthenticated`, identically and on purpose,
+and so does an unverified account on a store that requires verification. Do not try to tell the
+shopper which one it was.
 
 After a successful login, merge any guest cart. See [`cart.merge`](/api/cart#cart-merge).
 

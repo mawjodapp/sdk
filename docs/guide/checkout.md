@@ -238,18 +238,15 @@ Every checkout failure has a `code`. Branch on it and nothing else.
 | `cart_empty` | 422 | Nothing to order. | Send the buyer to the catalog. |
 | `cart_not_found` | 422 | No cart for this caller. | Send the buyer to the catalog. |
 | `payment_method_unavailable` | 422 | The chosen method is not offered here. | Re-read the allowed set and let them choose again. |
-| `customer_not_verified` | 403 | Signed in, identity not verified. | Verification screen, not the cart. |
+| `customer_not_verified` | 403 | Signed in, identity not verified, on a store that requires verification. | Verification screen, not the cart. |
 
 Read as a rule: 409 means refetch, 422 means rewrite the request, 403 means send them to
 verification.
 
-::: danger `customer_not_verified` is unrecoverable in release one
-Verification codes are recorded and never delivered, and the code is hashed at rest, so nobody can
-read it. An unverified customer therefore cannot clear this 403 and cannot place a first order.
-Build the verification screen anyway, because the flow is correct and only delivery is missing, but
-expect it to dead-end until the backend fix ships. See
-[Authentication → verify](/guide/authentication#verify).
-:::
+`customer_not_verified` is conditional on the store. `auth.customer_verification_required` is off by
+default, and while it is off an unverified customer places orders like anyone else and this code
+never arrives. Handle it regardless: a store can turn the setting on after your theme ships. See
+[Authentication → verification](/guide/authentication#verification).
 
 Two guards cover the whole family:
 

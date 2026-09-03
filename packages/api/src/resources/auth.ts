@@ -39,13 +39,19 @@ export interface ResetPasswordInput {
 }
 
 export interface AuthNamespace {
-  /** Registers and triggers a verification challenge. */
+  /**
+   * Registers and triggers a verification challenge.
+   *
+   * Whether that challenge gates anything is the store's decision, through the
+   * `auth.customer_verification_required` setting, which is off by default. An unverified customer
+   * signs in and orders on a default store.
+   */
   register(input: RegisterInput): Promise<Customer>
   /**
    * Signs in. Identity rides the session cookie afterwards; there is no token to store.
    *
-   * Wrong password, unknown account and unverified account all answer identically on purpose. Do
-   * not try to tell a caller which one it was.
+   * Wrong password and unknown account answer identically on purpose, and so does an unverified
+   * account on a store that requires verification. Do not try to tell a caller which one it was.
    */
   login(input: LoginInput): Promise<AuthSession>
   verify(input: VerifyInput): Promise<Customer>

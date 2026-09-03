@@ -138,6 +138,7 @@ your server sends to the browser. The browser never sees them. Sign in from the 
 | --- | --- |
 | `useStoreInfo`, `useStoreSettings` | yes |
 | `useProducts`, `useProduct` | yes |
+| `useSlider`, `useBanners` | yes; public, so no cookie is needed |
 | `useProductSearch` | invoked, not fetched; runs wherever you call it |
 | `useCart` reads | yes, with a session cookie or a supplied guest token |
 | `useCart` writes | signed-in only |

@@ -94,6 +94,23 @@ and a future method needs no SDK release.
 A fulfillment quote carries its own `allowed_payment_methods`, narrowed to that delivery zone or
 pickup location. When you have a quote, prefer it. See [`fulfillment`](/api/fulfillment).
 
+### Verification
+
+```ts
+settings['auth.customer_verification_required'] // boolean
+```
+
+Off by default. While it is off, an unverified customer signs in, orders and resets a password like
+anyone else, and `identity.verified_at: null` is a normal state on a live session. Read this key
+before surfacing any verification UX, and treat a missing key as off:
+
+```ts
+const requiresVerification = settings['auth.customer_verification_required']?.value === true
+```
+
+When a store turns it on, `checkout.place()` answers `403 customer_not_verified` until the identity
+is verified. See [Authentication → verification](/guide/authentication#verification).
+
 ### Branding
 
 The colours live in settings:

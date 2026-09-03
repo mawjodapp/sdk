@@ -44,8 +44,8 @@ createMawjodClient(options: MawjodClientOptions): MawjodClient
 | `onError` | `(error: MawjodApiError) => void` | none | Called with every problem+json failure before it is thrown. It does not swallow the error. |
 | `cartTokenStorage` | `CartTokenStorage` | `localStorage` in a browser, in-memory elsewhere | Where the guest cart token lives. See [Cart](/guide/cart#storage-adapters). |
 
-The returned client has one property per namespace: `store`, `catalog`, `search`, `cart`, `auth`,
-`customer`, `checkout`, `orders`, `returns`, `fulfillment`, `platform`.
+The returned client has one property per namespace: `store`, `catalog`, `search`, `content`, `cart`,
+`auth`, `customer`, `checkout`, `orders`, `returns`, `fulfillment`, `platform`.
 
 ## Your first catalog call
 

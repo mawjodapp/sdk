@@ -53,7 +53,8 @@ Start with [Getting started](/guide/getting-started) for the first call, then
 So you do not build a page around something that is not there:
 
 - No guest checkout. A shopper can fill a cart as a guest, but placing an order requires a
-  signed-in, verified customer.
+  signed-in customer. Whether that customer also has to be verified is a store setting, off by
+  default.
 - No bearer tokens. Identity is a Laravel Sanctum session cookie. There is no token to store, and
   no native-app auth path yet.
 - No wishlists, reviews, or related products. No endpoint serves them.

@@ -43,6 +43,7 @@ export default defineConfig({
             { text: 'store', link: '/api/store' },
             { text: 'catalog', link: '/api/catalog' },
             { text: 'search', link: '/api/search' },
+            { text: 'content', link: '/api/content' },
             { text: 'cart', link: '/api/cart' },
             { text: 'auth', link: '/api/auth' },
             { text: 'customer', link: '/api/customer' },

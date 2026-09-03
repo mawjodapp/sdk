@@ -88,6 +88,20 @@ today that renders the original logo and nothing else, and the header picks up t
 its own once an encoder generates them. See
 [`catalog` → imageSrcSet](/api/catalog#imagesrcset).
 
+The merchandising slots hang off the same shell. `useSlider()` gives the home page its hero and
+`useBanners()` gives the placed banners, both public and both often empty:
+
+```ts
+const { data: slides } = await useSlider()
+const { data: banners } = await useBanners()
+
+const homeTop = computed(() => banners.value?.find((banner) => banner.location === 'home_top') ?? null)
+```
+
+An empty array is a store that has not built one yet, so render each slot with `v-if` and let it
+vanish. Banners are keyed by the store's own location slugs, so look one up by key rather than by
+index. See [`content`](/api/content).
+
 ## The category nav
 
 `useCategories()` is where the nav's entries come from. The list is flat: categories have no
@@ -483,9 +497,9 @@ async function submit() {
 </template>
 ```
 
-One message for every failure, because the API gives one answer for every failure. Wrong password,
-unknown account and unverified account are indistinguishable on purpose, so do not invent a
-distinction the server refuses to make.
+One message for every failure, because the API gives one answer for every failure. Wrong password
+and unknown account are indistinguishable on purpose, and so is an unverified account on a store
+that requires verification, so do not invent a distinction the server refuses to make.
 
 `useCustomerAuth()` merges the guest cart after a successful login by default. A failing merge never
 fails the login: the session is real either way, and the reason lands on `mergeError`.
@@ -496,6 +510,11 @@ Registration is the same shape, with one thing to remember:
 <!-- pages/register.vue -->
 <script setup lang="ts">
 const { register } = useCustomerAuth()
+const { data: settings } = await useStoreSettings()
+
+const requiresVerification = computed(
+  () => settings.value?.settings['auth.customer_verification_required']?.value === true,
+)
 
 async function submit() {
   await register({
@@ -505,11 +524,20 @@ async function submit() {
     password_confirmation: confirmation.value,
   })
 
-  // register() does not create a session. Send them to verification, not to the account page.
-  await navigateTo(`/verify?identity=${encodeURIComponent(email.value)}`)
+  // register() does not create a session, so the account page would answer 401.
+  await navigateTo(
+    requiresVerification.value
+      ? `/verify?identity=${encodeURIComponent(email.value)}`
+      : '/login',
+  )
 }
 </script>
 ```
+
+`requiresVerification` comes from the store: `auth.customer_verification_required` in
+`useStoreSettings()`, off by default. Render the verification screen when the setting says so, and
+send everyone else straight to login, because on a default store an unverified customer signs in and
+orders like anyone else. See [Authentication → verification](/guide/authentication#verification).
 
 `verify()` does not create a session either. After verifying, send them to the login page.
 
@@ -682,6 +710,10 @@ replay.
 Payment methods come from the store, never from a constant. `cod` is always offered; `paymob`
 only when the deployment has the gateway configured. A fulfillment quote narrows it further, because
 a particular pickup point may accept less than the store does in general.
+
+The `customer_not_verified` branch stays in even though most stores never reach it. It fires only
+where `auth.customer_verification_required` is on, which is off by default, and a store can turn it
+on after the theme ships.
 
 ### The address form
 
@@ -865,7 +897,7 @@ follow:
 | Images on search hits | Search returns no image | Render text, or fetch catalog summaries for the visible page |
 | Responsive images | Renditions are empty until an encoder ships | Bind `imageSrcSet()` now; it renders the original today and adds sizes later. [Details](/api/catalog#imagesrcset) |
 | A variant's display name | Variants carry no label | Derive one from price, SKU or an attribute. [Details](#product-page) |
-| A shopper completing verification | Codes are recorded and never delivered, so a new customer cannot place a first order | Nothing on this side fixes it. [Details](/guide/authentication#verify) |
+| Verification to be mandatory | It is a store setting, off by default | Read `auth.customer_verification_required` and render the screen only when it is on. [Details](/guide/authentication#verification) |
 
 ## Next
 

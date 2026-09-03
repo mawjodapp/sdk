@@ -115,6 +115,10 @@ export interface StoreSettingEntry {
  * carries is only the asset UUID; it resolves nothing. To render the logo read
  * `StoreInfo.branding.logo` from `store.get()`, which comes back as a full `Image`. The rest of
  * the branding here is `branding.primary_color` and `branding.accent_color`, plain colour strings.
+ *
+ * `auth.customer_verification_required` is the switch a theme reads before it surfaces any
+ * verification UX. It is off by default, and while it is off an unverified customer signs in,
+ * orders and resets a password like anyone else.
  */
 export interface StoreSettings {
   settings: Record<string, StoreSettingEntry>
@@ -317,6 +321,38 @@ export interface MediaAsset {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Content                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One slide of the storefront's hero slider.
+ *
+ * `title` is already resolved to the requested language, with the same fallback as the catalog: a
+ * caption missing in one language falls back to the other rather than coming back blank.
+ */
+export interface Slide {
+  id: string
+  title: string | null
+  link_url: string | null
+  /** The same `Image` the catalog returns, renditions included. */
+  image: Image | null
+}
+
+/**
+ * A banner, one per location the store has defined.
+ *
+ * `location` is the store's own slug key, e.g. `home_top`. It is an open set defined per store,
+ * not an enum this SDK can close, so read the key rather than matching a list you assume.
+ */
+export interface Banner {
+  id: string
+  location: string
+  title: string | null
+  link_url: string | null
+  image: Image | null
+}
+
+/* -------------------------------------------------------------------------- */
 /* Cart                                                                        */
 /* -------------------------------------------------------------------------- */
 
@@ -405,6 +441,11 @@ export interface CustomerIdentity {
   type: CustomerIdentityType
   /** Normalized by the server: lowercased email, or E.164 phone. */
   value: string
+  /**
+   * `null` until the identity is verified, which is a normal state on a live session: verification
+   * is gated by the store's `auth.customer_verification_required` setting and that is off by
+   * default. Do not read `null` as a broken or half-registered account.
+   */
   verified_at: string | null
 }
 

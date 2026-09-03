@@ -92,8 +92,9 @@ Returned by `search.products` only. See [`search`](/api/search).
 
 ### Bare array
 
-`customer.addresses.list()` and `fulfillment.pickupLocations()` return plain arrays. They are not
-paginated, and the client types them as `T[]` so you cannot reach for `.data`.
+`customer.addresses.list()`, `fulfillment.pickupLocations()`, `content.slider()` and
+`content.banners()` return plain arrays. They are not paginated, and the client types them as `T[]`
+so you cannot reach for `.data`.
 
 ## Small shared shapes
 
@@ -397,6 +398,7 @@ import type {
   StoreNamespace,
   CatalogNamespace, CatalogProductsQuery,
   SearchNamespace, SearchProductsQuery,
+  ContentNamespace,
   CartNamespace, AddCartLineInput,
   AuthNamespace, LoginInput, RegisterInput, ResetPasswordInput, VerifyInput,
   CustomerNamespace, AddressInput, UpdateProfileInput, AreasQuery,

@@ -31,6 +31,10 @@ export type StaleCartErrorCode =
 /**
  * The complete checkout failure family, source-verified against
  * `App\Modules\Order\Exceptions\CheckoutFailed`.
+ *
+ * `customer_not_verified` only arrives when the store has turned on
+ * `auth.customer_verification_required`, which is off by default. Handle it, because any store may
+ * turn it on, but do not build the flow as though every checkout demands a verified identity.
  */
 export type CheckoutErrorCode =
   | StaleCartErrorCode
@@ -51,6 +55,7 @@ export type MawjodErrorCode =
   | 'store_unavailable'
   | 'rate_limited'
   | 'not_found'
+  | 'untrusted_host'
   | CheckoutErrorCode
   | 'variant_not_purchasable'
   | 'pricing_conflict'
@@ -63,6 +68,9 @@ export type MawjodErrorCode =
   | 'return_window_closed'
   | 'return_transition_not_allowed'
   | 'evidence_not_an_image'
+  | 'banner_has_no_image'
+  | 'slide_has_no_image'
+  | 'banner_location_in_use'
   | 'search_unavailable'
   | 'deployment_not_ready'
   | (string & {})

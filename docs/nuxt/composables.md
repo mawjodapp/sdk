@@ -345,6 +345,66 @@ this composable is for.
 For two independent searches, call `useMawjodApi().search.products()` and hold the results yourself.
 :::
 
+## `useSlider()`
+
+```ts
+useSlider(options?: MawjodAsyncOptions)
+```
+
+`GET /content/slider`, keyed `mawjod:content:slider`. Active slides in the vendor's order, already
+sorted by the server. Public, so it works for a guest.
+
+```vue
+<script setup lang="ts">
+import { imageSrcSet } from '@mawjod/api'
+
+const { data: slides } = await useSlider()
+</script>
+
+<template>
+  <section v-if="slides?.length">
+    <component
+      :is="slide.link_url ? 'a' : 'div'"
+      v-for="slide in slides"
+      :key="slide.id"
+      :href="slide.link_url ?? undefined"
+    >
+      <img v-if="slide.image" v-bind="imageSrcSet(slide.image)" :alt="slide.image.alt ?? slide.title ?? ''">
+      <p v-if="slide.title">{{ slide.title }}</p>
+    </component>
+  </section>
+</template>
+```
+
+`data` is `Slide[]`, and an empty array is the normal answer from a store that has not built a
+slider. Render the hero conditionally rather than reserving its height first.
+
+`title` is localized by the request locale. `image` and `link_url` are both nullable: a slide with
+no picture still comes back, and one with no link is decoration rather than an anchor.
+
+## `useBanners()`
+
+```ts
+useBanners(options?: MawjodAsyncOptions)
+```
+
+`GET /content/banners`, keyed `mawjod:content:banners`. At most one active banner per location the
+store has defined.
+
+```vue
+<script setup lang="ts">
+const { data: banners } = await useBanners()
+
+const homeTop = computed(() => banners.value?.find((banner) => banner.location === 'home_top') ?? null)
+</script>
+```
+
+`data` is `Banner[]`. `location` is the store's own slug key, not an enum, so look one up by key and
+render nothing when the lookup misses: a location with no active banner is absent from the array
+rather than present and empty.
+
+See [`content`](/api/content) for both shapes.
+
 ## `useCart()`
 
 ```ts
@@ -448,7 +508,8 @@ const { login } = useCustomerAuth({ mergeCartOnLogin: false })
 ### `register()` and `verify()` do not create a session
 
 Neither populates `customer`, because neither signs anyone in. Route a freshly registered shopper to
-a verification screen, and a freshly verified one to the login page.
+the login page, or to a verification screen when `auth.customer_verification_required` is on, and a
+freshly verified one to the login page.
 
 ### `logout()`
 
