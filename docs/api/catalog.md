@@ -153,11 +153,12 @@ interface ProductAttribute {
   name: string
   type: string
   value: string | number | boolean | null
+  label: string | null
 }
 ```
 
 ```json
-{ "key": "fabric", "name": "Fabric", "type": "option", "value": "cotton" }
+{ "key": "fabric", "name": "Fabric", "type": "option", "value": "cotton", "label": "Cotton" }
 ```
 
 Only the detail carries these. A `ProductSummary` has no `attributes`, so a product card cannot
@@ -165,6 +166,9 @@ show specs and a list cannot be filtered on them client-side.
 
 Only active attributes appear in the array: one the vendor has switched off is absent, not present
 with an empty value.
+
+Attributes arrive in the order the vendor arranged them, by the `position` they set on each one.
+Render them in the order you receive them and do not sort.
 
 `key` is the stable identifier to match on. `name` is the display label and follows the requested
 language like the rest of the catalog, so never derive a label from `key`.
@@ -176,6 +180,12 @@ and let anything else fall through to plain text.
 `value` is a string, a number, a boolean, or `null`. A boolean attribute comes back as a JSON
 `true` or `false`, not `"true"` and not `1`, because the server canonicalizes through the column's
 type before storing. No coercion is needed on this side.
+
+`label` is what to show. It follows the requested language the way `name` does, and carries the
+selected option's label for an `option` attribute. It is `null` for every other type, where the
+value is already its own display form. So the rule is: render `label ?? value`, match on `key`, and
+submit `value`. Showing `value` on its own is how an Arabic storefront ends up printing a localized
+heading beside an unlocalized reading.
 
 A specs table is the usual rendering:
 

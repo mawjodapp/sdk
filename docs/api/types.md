@@ -191,14 +191,16 @@ interface ProductAttribute {
   key: string
   name: string                              // localized display label
   type: string                              // option, text, number, boolean; open
-  value: string | number | boolean | null
+  value: string | number | boolean | null   // the machine value: match and submit, never show
+  label: string | null                      // localized; null unless type is option
 }
 ```
 
 Only `Product` carries `attributes`. A `ProductSummary` does not, so specs are a detail-page
-feature. Match on `key`, label with `name`, and branch on `type` only for the cases you render:
-`type` is open and a value added later must not break the theme. A boolean's `value` is a JSON
-`true` or `false`, never `"true"` or `1`. Full notes on
+feature. Match on `key`, label with `name`, show `label ?? value`, and branch on `type` only for
+the cases you render: `type` is open and a value added later must not break the theme. A boolean's
+`value` is a JSON `true` or `false`, never `"true"` or `1`. The array arrives in the vendor's own
+order, so render it as it comes. Full notes on
 [`catalog` → Attributes](/api/catalog#attributes).
 
 ## Images

@@ -243,8 +243,19 @@ export interface ProductAttribute {
    * A `boolean` attribute arrives as a JSON `true` or `false`, never the string `"true"` and never
    * `1`. The server canonicalizes through the column's type before storing, so no defensive
    * coercion is needed on this side.
+   *
+   * This is the machine value: key a picker on it and submit it back, but do not show it.
    */
   value: string | number | boolean | null
+  /**
+   * What to show, localized like `name` and with the same fallback.
+   *
+   * Only an `option` attribute has a display form of its own, so this is the selected option's
+   * label in the reader's language. Every other type sends `null`, because a text, number or
+   * boolean value is already its own display form. Render `label ?? value` and never `value`
+   * alone: the localized name beside an unlocalized value is the bug this field exists to fix.
+   */
+  label: string | null
 }
 
 /** `GET /catalog/products/{slug}`: the summary plus the fields only the detail view carries. */

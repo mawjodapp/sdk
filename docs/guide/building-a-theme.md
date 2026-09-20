@@ -305,7 +305,7 @@ async function add() {
     <dl v-if="product.attributes.length">
       <template v-for="attribute in product.attributes" :key="attribute.key">
         <dt>{{ attribute.name }}</dt>
-        <dd>{{ attribute.value }}</dd>
+        <dd>{{ attribute.label ?? attribute.value }}</dd>
       </template>
     </dl>
   </main>
@@ -342,7 +342,12 @@ when the selected variant has none.
 
 `product.attributes` is the specs list. It is detail-only, like `variants`, so a product card
 cannot show it. Each entry carries a localized `name` to label with and a `type` you can branch on
-for richer rendering. See [`catalog` → Attributes](/api/catalog#attributes).
+for richer rendering. The `<dd>` above shows `label ?? value` rather than `value`, because `value`
+is the machine reading: an option attribute puts the reader's own language in `label` and leaves
+`value` as the identifier the vendor chose, so printing `value` under a localized `name` puts two
+languages in one row. Other types send `label: null` and fall through to `value`. The list also
+arrives in the order the vendor arranged it, so render it in order rather than sorting it. See
+[`catalog` → Attributes](/api/catalog#attributes).
 
 ## Cart drawer
 
