@@ -3,7 +3,7 @@ import { useAsyncData } from '#imports'
 import { computed, type MaybeRefOrGetter, toValue } from 'vue'
 
 import { queryKey } from '../internal'
-import type { MawjodAsyncOptions } from '../types'
+import type { MawjodAsyncData, MawjodAsyncOptions } from '../types'
 import { useMawjodApi } from './client'
 
 /**
@@ -18,7 +18,7 @@ import { useMawjodApi } from './client'
 export function useAreas(
   query?: MaybeRefOrGetter<AreasQuery | undefined>,
   options: MawjodAsyncOptions = {},
-) {
+): MawjodAsyncData<Paginated<AdministrativeArea>> {
   const api = useMawjodApi()
   const resolved = computed(() => toValue(query))
 

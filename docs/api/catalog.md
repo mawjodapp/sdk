@@ -163,6 +163,9 @@ interface ProductAttribute {
 Only the detail carries these. A `ProductSummary` has no `attributes`, so a product card cannot
 show specs and a list cannot be filtered on them client-side.
 
+Only active attributes appear in the array: one the vendor has switched off is absent, not present
+with an empty value.
+
 `key` is the stable identifier to match on. `name` is the display label and follows the requested
 language like the rest of the catalog, so never derive a label from `key`.
 

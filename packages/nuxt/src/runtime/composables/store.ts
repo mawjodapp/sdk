@@ -3,18 +3,20 @@ import { useAsyncData } from '#imports'
 import { computed, type ComputedRef, type Ref } from 'vue'
 
 import { useStoreAvailabilityState } from '../internal'
-import type { MawjodAsyncOptions, StoreAvailabilityState } from '../types'
+import type { MawjodAsyncData, MawjodAsyncOptions, StoreAvailabilityState } from '../types'
 import { useMawjodApi } from './client'
 
 /** `GET /store`. Store identity: id, status, the localized name, and the default locale. */
-export function useStoreInfo(options: MawjodAsyncOptions = {}) {
+export function useStoreInfo(options: MawjodAsyncOptions = {}): MawjodAsyncData<StoreInfo> {
   const api = useMawjodApi()
 
   return useAsyncData<StoreInfo>('mawjod:store', () => api.store.get(), options)
 }
 
 /** `GET /store/settings`. The storefront's operational switches. */
-export function useStoreSettings(options: MawjodAsyncOptions = {}) {
+export function useStoreSettings(
+  options: MawjodAsyncOptions = {},
+): MawjodAsyncData<StoreSettings> {
   const api = useMawjodApi()
 
   return useAsyncData<StoreSettings>('mawjod:store:settings', () => api.store.settings(), options)

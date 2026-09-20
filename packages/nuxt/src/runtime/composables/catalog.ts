@@ -11,7 +11,7 @@ import { useAsyncData } from '#imports'
 import { computed, type MaybeRefOrGetter, toValue } from 'vue'
 
 import { queryKey } from '../internal'
-import type { MawjodAsyncOptions } from '../types'
+import type { MawjodAsyncData, MawjodAsyncOptions } from '../types'
 import { useMawjodApi } from './client'
 
 /**
@@ -24,7 +24,7 @@ import { useMawjodApi } from './client'
 export function useProducts(
   query?: MaybeRefOrGetter<CatalogProductsQuery | undefined>,
   options: MawjodAsyncOptions = {},
-) {
+): MawjodAsyncData<Paginated<ProductSummary>> {
   const api = useMawjodApi()
   const resolved = computed(() => toValue(query))
 
@@ -36,7 +36,10 @@ export function useProducts(
 }
 
 /** `GET /catalog/products/{slug}`. Refetches when `slug` changes. */
-export function useProduct(slug: MaybeRefOrGetter<string>, options: MawjodAsyncOptions = {}) {
+export function useProduct(
+  slug: MaybeRefOrGetter<string>,
+  options: MawjodAsyncOptions = {},
+): MawjodAsyncData<Product> {
   const api = useMawjodApi()
   const resolved = computed(() => toValue(slug))
 
@@ -62,7 +65,7 @@ export function useProduct(slug: MaybeRefOrGetter<string>, options: MawjodAsyncO
 export function useCategories(
   query?: MaybeRefOrGetter<CatalogTaxonomyQuery | undefined>,
   options: MawjodAsyncOptions = {},
-) {
+): MawjodAsyncData<Paginated<CategoryListItem>> {
   const api = useMawjodApi()
   const resolved = computed(() => toValue(query))
 
@@ -83,7 +86,7 @@ export function useCategories(
 export function useBrands(
   query?: MaybeRefOrGetter<CatalogTaxonomyQuery | undefined>,
   options: MawjodAsyncOptions = {},
-) {
+): MawjodAsyncData<Paginated<BrandListItem>> {
   const api = useMawjodApi()
   const resolved = computed(() => toValue(query))
 

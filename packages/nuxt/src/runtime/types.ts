@@ -2,6 +2,7 @@
  * Shared runtime types. They live under `runtime/` so both the module (build-time) and the
  * composables (run-time) can reference them without a cross-boundary import in the wrong direction.
  */
+import type { Ref } from 'vue'
 
 /** The shape the module writes to `runtimeConfig.public.mawjod`. */
 export interface MawjodPublicRuntimeConfig {
@@ -37,6 +38,38 @@ export interface MawjodAsyncOptions {
   /** What to do when a second fetch starts while one is in flight. */
   dedupe?: 'cancel' | 'defer'
 }
+
+/** What a data composable's `status` holds, the same four words `useAsyncData` uses. */
+export type MawjodAsyncStatus = 'idle' | 'pending' | 'success' | 'error'
+
+/**
+ * The handle a data composable hands back: the slice of Nuxt's `AsyncData` this module guarantees.
+ *
+ * It is written out instead of inferred from `useAsyncData`, and it imports nothing from `#imports`.
+ * That alias is a Nuxt virtual module with no resolution during declaration emit, so a return type
+ * inferred through it lands in the published `.d.ts` as `any`.
+ *
+ * A subset, never an invention: `execute` and `clear` exist on the runtime object too, and a theme
+ * that wants them can call `useAsyncData` itself around `useMawjodApi()`.
+ */
+export interface MawjodAsyncHandle<T> {
+  /** `undefined` until the first fetch resolves, and again after a failure. */
+  data: Ref<T | undefined>
+  pending: Ref<boolean>
+  /** Nuxt puts a `NuxtError` here; the type stays open rather than promising its shape. */
+  error: Ref<unknown>
+  status: Ref<MawjodAsyncStatus>
+  refresh: () => Promise<void>
+}
+
+/**
+ * The handle, awaitable.
+ *
+ * `useAsyncData` returns its handle and a promise of it at once, so both `const { data } =
+ * useProducts()` and `const { data } = await useProducts()` work. Dropping the promise half would
+ * break every awaited call site.
+ */
+export type MawjodAsyncData<T> = MawjodAsyncHandle<T> & Promise<MawjodAsyncHandle<T>>
 
 /** What `useStoreAvailability()` keeps, kept plain so it survives the SSR payload. */
 export interface StoreAvailabilityState {
