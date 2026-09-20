@@ -158,8 +158,14 @@ interface ProductAttribute {
 ```
 
 ```json
-{ "key": "fabric", "name": "Fabric", "type": "option", "value": "cotton", "label": "Cotton" }
+[
+  { "key": "fabric", "name": "Fabric", "type": "option", "value": "cotton", "label": "Cotton" },
+  { "key": "weight", "name": "Weight", "type": "number", "value": 250, "label": null }
+]
 ```
+
+Both shapes are real. Only an option attribute carries a `label`; a text, number, or boolean value
+is its own display, so `label` is `null` there and `label ?? value` renders every row correctly.
 
 Only the detail carries these. A `ProductSummary` has no `attributes`, so a product card cannot
 show specs and a list cannot be filtered on them client-side.
