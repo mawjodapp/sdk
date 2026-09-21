@@ -30,12 +30,28 @@ interface Slide {
   title: string | null
   link_url: string | null
   image: Image | null
+  mobile_image: Image | null
 }
 ```
 
 ```ts
 const slides = await mawjod.content.slider()
 ```
+
+`mobile_image` is a tall picture for phones, the second one in the slide's gallery, or `null` when
+the vendor attached only the wide one. A wide slide on a phone is a strip nobody can read, so a
+theme that has a tall picture should use it below its tablet breakpoint and fall back to `image`
+otherwise:
+
+```vue
+<picture>
+  <source v-if="slide.mobile_image" media="(max-width: 767px)" v-bind="pictureSource(slide.mobile_image)" />
+  <img v-bind="imageSrcSet(slide.image)" :alt="slide.image.alt ?? slide.title ?? ''" />
+</picture>
+```
+
+where `pictureSource` is `imageSrcSet` read as `{ srcset }` for a `<source>`; the helper's `srcset`
+is what a `<source>` wants, and its `src` is ignored there.
 
 ## `content.banners()`
 
@@ -52,6 +68,7 @@ interface Banner {
   title: string | null
   link_url: string | null
   image: Image | null
+  mobile_image: Image | null
 }
 ```
 
@@ -65,6 +82,12 @@ const homeTop = banners.find((banner) => banner.location === 'home_top') ?? null
 
 A location with no active banner is absent from the array. It is not present with a `null` banner,
 so a lookup that misses is the signal to render nothing in that slot.
+
+A store can declare the slot keys its theme looks up in the public setting `theme.banner_slots`, a
+list of `{ key, name_ar, name_en }`. Whoever installs a theme sets it, and from then on the
+dashboard offers those keys as a list and the API refuses a location under any other key. Read it
+through `store.settings()` if your theme wants to check the store was set up for it; a store that
+never declared any answers `[]` and accepts any key, which is how every store begins.
 
 ## Empty is the normal state
 

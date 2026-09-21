@@ -202,7 +202,7 @@ throws for the whole results page, for the same reason a list does.
 | `unauthenticated` | 401 | any authenticated endpoint |
 | `forbidden` | 403 | any authenticated endpoint |
 | `validation_failed` | 422 | everywhere |
-| `rate_limited` | 429 | everywhere |
+| `rate_limited` | 429 | everywhere; 300 requests a minute per address for a guest, 300 per signed-in customer, counted separately, with tighter limits on sign-in, search, cart and checkout |
 | `store_unavailable` | 503 | everywhere |
 | `not_found` | 404 | product detail; likely on other by-id reads |
 | `untrusted_host` | 400 | everywhere, refused before the endpoint runs |

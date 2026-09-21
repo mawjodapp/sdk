@@ -245,17 +245,17 @@ say: the product name is usually the right fallback.
 imageSrcSet(image: Image): { src: string; srcset: string }
 ```
 
-::: info Renditions are empty in release one
-There is no image encoder yet, so every public image arrives with `renditions: {}`. The media
-processor publishes rendition urls only when the processor behind them reports that it produces
-renderable images, and the release-one one says it does not, so the map is empty rather than full of
-urls that are not pictures.
+::: info Renditions since backend v1.4.0
+Until backend v1.4.0 every public image arrived with `renditions: {}`: the release-one processor
+wrote placeholders and the API withheld their urls rather than publish addresses that were not
+pictures. Since v1.4.0 the encoder is real, and every image carries `thumbnail`, `medium` and
+`large` as WebP at 160, 640 and 1280 pixels on the longest side, the aspect kept and nothing
+enlarged.
 
-An empty map is the documented "not generated yet" case, not a failure, and this helper already
-handles it: you get the original url and an empty `srcset`, which browsers ignore. Binding the
-helper today renders the original and nothing else. When a real encoder ships the map repopulates,
-`srcset` starts listing sizes, and a theme that already binds the helper becomes responsive without
-a code change.
+An empty map still means "not generated yet": a store that uploaded before the encoder keeps `{}`
+until its operator runs `mawjod:media:reprocess` once, and a freshly uploaded image has it for the
+seconds before its job runs. This helper handles both the same way, the original and an empty
+`srcset`, so a theme binds it once and gets sizes as they exist.
 :::
 
 Builds the two attributes an `<img>` wants. `src` is the original url, which is always present.

@@ -900,7 +900,7 @@ follow:
 | Product reviews | No endpoint | Leave it out |
 | Related products | No endpoint | Use `filter[category]` on the catalog list |
 | Images on search hits | Search returns no image | Render text, or fetch catalog summaries for the visible page |
-| Responsive images | Renditions are empty until an encoder ships | Bind `imageSrcSet()` now; it renders the original today and adds sizes later. [Details](/api/catalog#imagesrcset) |
+| Responsive images | Real since backend v1.4.0; a store uploaded earlier keeps `{}` until reprocessed | Bind `imageSrcSet()`; it lists the sizes that exist. [Details](/api/catalog#imagesrcset) |
 | A variant's display name | Variants carry no label | Derive one from price, SKU or an attribute. [Details](#product-page) |
 | Verification to be mandatory | It is a store setting, off by default | Read `auth.customer_verification_required` and render the screen only when it is on. [Details](/guide/authentication#verification) |
 

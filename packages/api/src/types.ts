@@ -347,6 +347,12 @@ export interface Slide {
   link_url: string | null
   /** The same `Image` the catalog returns, renditions included. */
   image: Image | null
+  /**
+   * A tall companion for phones, when the vendor attached one: the picture at position one of
+   * the slide's gallery. `null` when there is only the wide picture, which is most slides, so
+   * fall back to `image` rather than reserving a hole.
+   */
+  mobile_image: Image | null
 }
 
 /**
@@ -361,6 +367,8 @@ export interface Banner {
   title: string | null
   link_url: string | null
   image: Image | null
+  /** As on `Slide`: the tall picture for phones, or `null`. */
+  mobile_image: Image | null
 }
 
 /* -------------------------------------------------------------------------- */

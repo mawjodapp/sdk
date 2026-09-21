@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import { createHarness } from './helpers.js'
 
-function image(): Record<string, unknown> {
+function image(name = 'new'): Record<string, unknown> {
   return {
-    id: '01920000-0000-7000-8000-00000000000a',
-    url: 'https://cdn.test/slides/new.webp',
+    id: `01920000-0000-7000-8000-00000000000${name === 'new' ? 'a' : 'b'}`,
+    url: `https://cdn.test/slides/${name}.webp`,
     alt: null,
     renditions: {},
   }
@@ -23,10 +23,11 @@ describe('content', () => {
               title: 'New arrivals',
               link_url: 'https://shop.test/new',
               image: image(),
+              mobile_image: image('new-tall'),
             },
             // A slide whose picture has not been stored yet. It still comes back, so a theme that
             // assumes `image` is present renders a broken hero rather than skipping the slide.
-            { id: 'slide-2', title: null, link_url: null, image: null },
+            { id: 'slide-2', title: null, link_url: null, image: null, mobile_image: null },
           ],
           meta: { request_id: 'req-slider' },
         },
@@ -41,6 +42,7 @@ describe('content', () => {
               title: 'Summer sale',
               link_url: 'https://shop.test/sale',
               image: image(),
+              mobile_image: null,
             },
           ],
           meta: { request_id: 'req-banners' },
@@ -64,6 +66,12 @@ describe('content', () => {
     expect(slides[0]!.image?.renditions).toEqual({})
     expect(slides[1]!.image).toBeNull()
     expect(slides[1]!.title).toBeNull()
+
+    // The tall picture for phones rides along when the vendor attached one, and is null, not
+    // absent, when they did not; both shapes pass through untouched.
+    expect(slides[0]!.mobile_image?.url).toBe('https://cdn.test/slides/new-tall.webp')
+    expect(slides[1]!.mobile_image).toBeNull()
+    expect(banners[0]!.mobile_image).toBeNull()
 
     // The location key, not an index: only one banner per location comes back, and a location with
     // no active banner is absent rather than null.
