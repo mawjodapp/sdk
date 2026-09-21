@@ -110,9 +110,9 @@ server. `branding.logo` and `branding.icon` are resolved images, each `null` unt
 uploads one, so bind the logo through `imageSrcSet()` and fall back to `name`. See
 [`store`](/api/store).
 
-Renditions are empty in release one, so the helper yields the original url and an empty `srcset`
-today, and starts serving sizes once an encoder generates them. See
-[`catalog` → imageSrcSet](/api/catalog#imagesrcset).
+The helper serves the generated rendition sizes on its own; a logo uploaded before the encoder
+shipped keeps an empty rendition map until the store reprocesses it and renders as the original.
+See [`catalog` → imageSrcSet](/api/catalog#imagesrcset).
 
 ## `useStoreSettings()`
 

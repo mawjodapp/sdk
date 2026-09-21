@@ -300,11 +300,11 @@ always there. `srcset` lists each rendition as `url width`, sorted narrowest fir
 keys the image actually carries, so an image with no renditions yields an empty string rather than
 a guess. See [`catalog` → imageSrcSet](/api/catalog#imagesrcset).
 
-::: info Renditions are empty in release one
-No encoder has shipped yet, so every image arrives with `renditions: {}` and this helper returns the
-original url with an empty `srcset`, which browsers ignore. It is safe to bind now and it starts
-serving sizes on its own once renditions are generated. Full note on
-[`catalog` → imageSrcSet](/api/catalog#imagesrcset).
+::: info Media uploaded before the encoder
+The backend generates thumbnail, medium, and large renditions at 160, 640, and 1280 pixels on the
+longest side. Media uploaded before the encoder shipped keeps `renditions: {}` until the store
+reprocesses it; for those images this helper returns the original url with an empty `srcset`, which
+browsers ignore. Full note on [`catalog` → imageSrcSet](/api/catalog#imagesrcset).
 :::
 
 ### `uuidv7`

@@ -83,9 +83,9 @@ const logo = computed(() => store.value?.branding.logo ?? null)
 has not set one. That is why the header falls back to `store.name`, which the server has already
 localized. See [Branding](#branding) at the end.
 
-`imageSrcSet()` fills in the `src` and `srcset` attributes. Renditions are empty in release one, so
-today that renders the original logo and nothing else, and the header picks up the smaller sizes on
-its own once an encoder generates them. See
+`imageSrcSet()` fills in the `src` and `srcset` attributes from the generated renditions, so the
+header serves a fitting size on its own. A logo uploaded before the encoder shipped keeps an empty
+rendition map until the store reprocesses its media, and the helper renders the original there. See
 [`catalog` → imageSrcSet](/api/catalog#imagesrcset).
 
 The merchandising slots hang off the same shell. `useSlider()` gives the home page its hero and
@@ -233,9 +233,9 @@ is `null` whenever nobody wrote alternative text, which is why the product name 
 See [`catalog` → Images](/api/catalog#images).
 
 `imageSrcSet()` spreads into `src` and `srcset`, and `sizes` is yours to write because only the
-layout knows how wide a card renders. Renditions are empty in release one, so each card shows the
-original today and starts picking a size per viewport once an encoder generates them, with no edit
-to this template. See [`catalog` → imageSrcSet](/api/catalog#imagesrcset).
+layout knows how wide a card renders. Each card picks a size per viewport from the generated
+renditions, and shows the original for media whose rendition map is still empty. See
+[`catalog` → imageSrcSet](/api/catalog#imagesrcset).
 
 The getter form of the query makes the list refetch when `page` or the route's category changes.
 `filter.category` takes a category slug. One category has one slug shared by every locale, so the
@@ -865,9 +865,9 @@ Both `branding.logo` and `branding.icon` are `null` until the store uploads one,
 the `store.name` fallback the [app shell](#the-app-shell) shows. The icon is the square mark, which
 is what a favicon or a narrow header wants.
 
-Bind `v-bind="imageSrcSet(logo)"` and keep `logo.alt` as the alternative text. Renditions are empty
-in release one, so that renders the original alone for now and folds in the smaller sizes once an
-encoder generates them. See [`catalog` → imageSrcSet](/api/catalog#imagesrcset).
+Bind `v-bind="imageSrcSet(logo)"` and keep `logo.alt` as the alternative text. The generated
+renditions carry the smaller sizes; a logo uploaded before the encoder shipped renders as the
+original until the store reprocesses it. See [`catalog` → imageSrcSet](/api/catalog#imagesrcset).
 
 Store settings hold `branding.logo_asset_id` and `branding.icon_asset_id`, but those are bare asset
 UUIDs and resolve to nothing renderable. Read the images from `useStoreInfo()` and the colours from
