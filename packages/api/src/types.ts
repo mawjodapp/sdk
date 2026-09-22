@@ -348,9 +348,9 @@ export interface Slide {
   /** The same `Image` the catalog returns, renditions included. */
   image: Image | null
   /**
-   * A tall companion for phones, when the vendor attached one: the picture at position one of
-   * the slide's gallery. `null` when there is only the wide picture, which is most slides, so
-   * fall back to `image` rather than reserving a hole.
+   * A tall companion for phones: the stored asset at position 1, decided by position rather than
+   * upload order. `null` when no picture sits there, which is most slides, so fall back to
+   * `image` rather than reserving a hole.
    */
   mobile_image: Image | null
 }

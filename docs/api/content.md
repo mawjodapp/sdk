@@ -38,10 +38,11 @@ interface Slide {
 const slides = await mawjod.content.slider()
 ```
 
-`mobile_image` is a tall picture for phones, the second one in the slide's gallery, or `null` when
-the vendor attached only the wide one. A wide slide on a phone is a strip nobody can read, so a
-theme that has a tall picture should use it below its tablet breakpoint and fall back to `image`
-otherwise:
+`mobile_image` is the tall picture for phones: the stored asset at position 1 in the slide's media,
+or `null` when no picture sits there. Position decides, not upload order. `image` is the asset at
+position 0, and a slide or banner goes live only with a picture in that slot. A wide slide on a
+phone is a strip nobody can read, so a theme that has a tall picture should use it below its tablet
+breakpoint and fall back to `image` otherwise:
 
 ```vue
 <picture>
