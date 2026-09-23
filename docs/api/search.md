@@ -126,7 +126,9 @@ stay text, which is what a compact list wants anyway.
 Rebuilding the search index is what turns the picture on. The index document contract moved from 1
 to 2 in backend v1.4.4, and a document written under contract 1 is recognised as stale rather than
 served, so a store that upgrades answers hits without pictures until its operator rebuilds the
-index once. It is a one-time deployment step; no client call triggers it.
+index once. It is a one-time deployment step; no client call triggers it. On backends newer than
+v1.4.4 the operator runs `php artisan mawjod:search:reindex` on the app container, with `--dry-run`
+first to see the drift; a deployment on v1.4.4 exactly has the fields but not yet the command.
 
 ### `SearchResults`
 
