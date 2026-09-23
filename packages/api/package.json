@@ -1,6 +1,6 @@
 {
   "name": "@mawjod/api",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Zero-dependency TypeScript client for the Mawjod storefront API.",
   "type": "module",
   "sideEffects": false,
@@ -12,7 +12,13 @@
   },
   "homepage": "https://mawjodapp.github.io/sdk/",
   "bugs": "https://github.com/mawjodapp/sdk/issues",
-  "keywords": ["mawjod", "storefront", "ecommerce", "api-client", "typescript"],
+  "keywords": [
+    "mawjod",
+    "storefront",
+    "ecommerce",
+    "api-client",
+    "typescript"
+  ],
   "publishConfig": {
     "access": "public"
   },

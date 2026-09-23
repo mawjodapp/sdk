@@ -24,3 +24,19 @@ jobs:
       - run: pnpm test
       - run: pnpm typecheck
       - run: pnpm -r publish --access public --no-git-checks
+      # The registry once accepted a publish, logged its provenance, answered success, and never
+      # added the version to the packument. A green publish line is not evidence; the packument is.
+      - name: Verify versions exist on the registry
+        run: |
+          version=$(node -p "require('./packages/api/package.json').version")
+          for pkg in api nuxt; do
+            for i in $(seq 1 30); do
+              if curl -sf "https://registry.npmjs.org/@mawjod%2F$pkg" | grep -q "\"$version\":{\"name\""; then
+                echo "@mawjod/$pkg@$version is on the registry"
+                continue 2
+              fi
+              sleep 10
+            done
+            echo "@mawjod/$pkg@$version never appeared on the registry" >&2
+            exit 1
+          done
