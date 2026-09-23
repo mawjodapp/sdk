@@ -354,7 +354,7 @@ arrives in the order the vendor arranged it, so render it in order rather than s
 ```vue
 <!-- components/CartDrawer.vue -->
 <script setup lang="ts">
-import { formatMoney } from '@mawjod/api'
+import { formatMoney, imageSrcSet } from '@mawjod/api'
 
 const open = defineModel<boolean>('open', { required: true })
 
@@ -395,7 +395,11 @@ function nameOf(line: { name_ar: string; name_en: string }) {
 
     <ul v-else>
       <li v-for="line in lines" :key="line.id">
-        <span>{{ nameOf(line) }}</span>
+        <NuxtLink v-if="line.product_slug" :to="`/products/${line.product_slug}`">
+          <img v-if="line.image" v-bind="imageSrcSet(line.image)" sizes="64px" :alt="line.image.alt ?? ''">
+          {{ nameOf(line) }}
+        </NuxtLink>
+        <span v-else>{{ nameOf(line) }}</span>
         <input
           type="number"
           min="1"
@@ -445,6 +449,12 @@ and the coupon calls populate it.
 Cart lines carry `name_ar` and `name_en` together, unlike the catalog which resolves one locale
 server-side. That is on purpose: a stored line renders correctly whichever locale the shopper was in
 when they added it.
+
+`line.image` and `line.product_slug` are read off the catalogue on every cart projection rather than
+stored with the line, so a replaced picture or a renamed product reaches an old cart on its own. The
+row above degrades in both directions: no picture uploaded means `image` is `null` and the name
+carries the row, and a product that is gone means `product_slug` is `null` and the row stops being a
+link instead of pointing at a 404.
 
 The `onMounted` matters too: guest cart writes during SSR are not supported, so the drawer fetches
 in the browser.
@@ -899,7 +909,7 @@ follow:
 | Wishlist | No endpoint | Local storage, or leave it out |
 | Product reviews | No endpoint | Leave it out |
 | Related products | No endpoint | Use `filter[category]` on the catalog list |
-| Images on search hits | Search returns no image | Render text, or fetch catalog summaries for the visible page |
+| Images on search hits | Real since backend v1.4.4, once the store rebuilds its search index | Bind `imageSrcSet()` to `hit.image`. [Details](/api/search#images-on-hits) |
 | Responsive images | Real since backend v1.4.0; a store uploaded earlier keeps `{}` until reprocessed | Bind `imageSrcSet()`; it lists the sizes that exist. [Details](/api/catalog#imagesrcset) |
 | A variant's display name | Variants carry no label | Derive one from price, SKU or an attribute. [Details](#product-page) |
 | Verification to be mandatory | It is a store setting, off by default | Read `auth.customer_verification_required` and render the screen only when it is on. [Details](/guide/authentication#verification) |

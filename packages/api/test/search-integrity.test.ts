@@ -14,6 +14,14 @@ function hit(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     brand: { id: 'brand-1', name: 'Tefal' },
     category: { id: 'category-1', name: 'Kitchen' },
     from_price: money(129900),
+    image: {
+      id: 'img-1',
+      url: 'https://cdn.test/shirt.webp',
+      alt: 'A blue cotton shirt',
+      renditions: {
+        thumbnail: { url: 'https://cdn.test/shirt-thumbnail.webp', width: 160, height: 160 },
+      },
+    },
     ...overrides,
   }
 }
@@ -49,5 +57,33 @@ describe('search payload integrity guard', () => {
     // The healthy first row must not mask the unlinkable second one.
     expect((error as PayloadIntegrityError).resourceId).toBe('hit-2')
     expect((error as PayloadIntegrityError).requestId).toBe('req-hollow-hit')
+  })
+
+  it('passes a hit with no picture through, because only the slug is load-bearing', async () => {
+    const { client } = createHarness([
+      {
+        status: 200,
+        body: {
+          data: [hit(), hit({ id: 'hit-2', image: null })],
+          links: { first: null, last: null, prev: null, next: null },
+          meta: {
+            request_id: 'req-mixed-images',
+            current_page: 1,
+            per_page: 20,
+            last_page: 1,
+            total: 2,
+            engine: 'meilisearch',
+            exhaustive_total: true,
+            facets: [],
+          },
+        },
+      },
+    ])
+
+    const results = await client.search.products({ q: 'shirt' })
+
+    expect(results.data[0]?.image?.renditions.thumbnail?.width).toBe(160)
+    // A product with nothing uploaded is a normal hit, not a hollow one.
+    expect(results.data[1]?.image).toBeNull()
   })
 })

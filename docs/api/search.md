@@ -72,6 +72,7 @@ interface SearchProductHit {
   brand: SearchTaxonomyRef    // { id: string | null, name: string }
   category: SearchTaxonomyRef
   from_price: Money
+  image: Image | null
 }
 ```
 
@@ -102,16 +103,30 @@ stance the order and return lists take. See
 A hit carries no `variants` and no `description`. Follow the slug into
 [`catalog.products.get`](/api/catalog#catalog-products-get) for detail.
 
-### Hits carry no image
+### Images on hits
 
-There is no `image` on a `SearchProductHit` this release, and no other picture field either. The
-catalog exposes images and search does not.
+`image` is the product's first public picture, the same [`Image`](/api/catalog#images) the catalog
+returns with the same renditions. A results page renders it like any other card, with no second
+call for the visible slugs:
 
-So a results page has two honest options. Render results as text, which is what a typeahead and a
-compact result list want anyway. Or, when the design needs pictures, fetch catalog summaries for
-the slugs on the visible page only and render from those:
-[`catalog.products.list`](/api/catalog#catalog-products-list) rows carry
-[`image`](/api/catalog#images). Do not fetch the whole result set to decorate it.
+```vue
+<img
+  v-if="hit.image"
+  v-bind="imageSrcSet(hit.image)"
+  sizes="(max-width: 600px) 50vw, 240px"
+  :alt="hit.image.alt ?? hit.name_ar"
+>
+<span v-else>{{ hit.name_ar }}</span>
+```
+
+`null` means the product has no picture uploaded, not that search withheld one, so a results grid
+needs a text or placeholder row rather than a hole. A typeahead can keep ignoring the field and
+stay text, which is what a compact list wants anyway.
+
+Rebuilding the search index is what turns the picture on. The index document contract moved from 1
+to 2 in backend v1.4.4, and a document written under contract 1 is recognised as stale rather than
+served, so a store that upgrades answers hits without pictures until its operator rebuilds the
+index once. It is a one-time deployment step; no client call triggers it.
 
 ### `SearchResults`
 

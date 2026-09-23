@@ -59,11 +59,30 @@ interface CartLine {
   unit_price: Money
   line_total: Money
   purchasable: boolean
+  product_slug: string | null
+  image: Image | null
 }
 ```
 
 Lines carry both locales, unlike the catalog which resolves one server-side. A stored line therefore
 renders correctly whichever locale the shopper was in when they added it.
+
+A row can show a picture and link back to the product. `image` is the variant's own picture where it
+has one and the product's first otherwise, the same [`Image`](/api/catalog#images) the catalog
+returns; `product_slug` is the address of the product page, for `/products/{product_slug}`:
+
+```vue
+<NuxtLink v-if="line.product_slug" :to="`/products/${line.product_slug}`">
+  <img v-if="line.image" v-bind="imageSrcSet(line.image)" sizes="64px" :alt="line.image.alt ?? ''">
+  {{ line.name_ar }}
+</NuxtLink>
+<span v-else>{{ line.name_ar }}</span>
+```
+
+Both are read off the catalogue on every cart projection rather than snapshotted when the line was
+added, so a renamed product or a replaced picture reaches an old cart on its own. `product_slug` is
+`null` only when the product is gone, which is the case the fallback above covers; `image` is `null`
+when nothing has been uploaded.
 
 `subtotal` is the plain line total. Discounts and tax do not appear on `Cart`; they live on
 [`cart.quote()`](#cart-quote).

@@ -49,7 +49,34 @@ export function cartFixture(itemCount: number, id = 'cart-1'): Cart {
     item_count: itemCount,
     subtotal: { minor: itemCount * 1000, currency: 'EGP', tax_inclusive: true },
     has_unpurchasable_lines: false,
-    lines: [],
+    // Typed, so a field added to `CartLine` upstream fails the typecheck here rather than going
+    // unbuilt everywhere in the suite. An empty cart has no line to build.
+    lines:
+      itemCount === 0
+        ? []
+        : [
+            {
+              id: 'line-1',
+              variant_id: 'var-1',
+              sku: 'SHIRT-BLUE-M',
+              name_ar: 'قميص',
+              name_en: 'Shirt',
+              option_selection: {},
+              quantity: itemCount,
+              unit_price: { minor: 1000, currency: 'EGP', tax_inclusive: true },
+              line_total: { minor: itemCount * 1000, currency: 'EGP', tax_inclusive: true },
+              purchasable: true,
+              product_slug: 'cotton-shirt',
+              image: {
+                id: 'img-1',
+                url: 'https://cdn.test/shirt.webp',
+                alt: 'A blue cotton shirt',
+                renditions: {
+                  thumbnail: { url: 'https://cdn.test/shirt-thumbnail.webp', width: 160, height: 160 },
+                },
+              },
+            },
+          ],
     adjustments: [],
     last_activity_at: null,
   }

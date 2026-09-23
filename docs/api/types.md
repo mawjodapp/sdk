@@ -230,10 +230,11 @@ interface BrandListItem extends Brand {
 }
 ```
 
-`Image` appears as `ProductSummary.image`, `Product.images`, `Variant.images`, on the taxonomy
-listing rows above, and as `StoreInfo.branding.logo` and `StoreInfo.branding.icon`. It does not
-appear on a `SearchProductHit`, and the `Category` and `Brand` embedded in a product summary stay
-four fields with no image on them, which is why the listing rows are separate types.
+`Image` appears as `ProductSummary.image`, `Product.images`, `Variant.images`,
+`SearchProductHit.image`, `CartLine.image`, on the taxonomy listing rows above, and as
+`StoreInfo.branding.logo` and `StoreInfo.branding.icon`. The `Category` and `Brand` embedded in a
+product summary stay four fields with no image on them, which is why the listing rows are separate
+types.
 
 A rendition url is read, never derived from the original's. A key that is not in `renditions` is a
 size that has not been generated yet rather than a failure. Both rules, and the full field notes,

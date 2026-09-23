@@ -282,8 +282,8 @@ export interface SearchTaxonomyRef {
  * by side and does not resolve one. The slug is not one of those: a product has a single slug that
  * is the same string under `ar` and `en`.
  *
- * A hit carries no image. Render results as text, or follow the slugs on the visible page into
- * `catalog.products.get` when you want pictures.
+ * A hit still carries no `variants` and no `description`. Follow the slug into
+ * `catalog.products.get` for those.
  */
 export interface SearchProductHit {
   id: string
@@ -296,6 +296,11 @@ export interface SearchProductHit {
   brand: SearchTaxonomyRef
   category: SearchTaxonomyRef
   from_price: Money
+  /**
+   * The product's first public picture: the same `Image` the catalog returns, renditions included,
+   * so `imageSrcSet` works on it like on any card. `null` when the product has no picture uploaded.
+   */
+  image: Image | null
 }
 
 export interface MediaVariant {
@@ -387,6 +392,18 @@ export interface CartLine {
   unit_price: Money
   line_total: Money
   purchasable: boolean
+  /**
+   * The address of the product page behind the line, for a link to `/products/{product_slug}`.
+   * Read off the catalogue on every cart projection rather than snapshotted when the line was
+   * added, so a renamed product answers with its new slug. `null` only when the product is gone.
+   */
+  product_slug: string | null
+  /**
+   * The picture the row shows: the variant's own where it has one, the product's first otherwise.
+   * Re-read on every projection like `product_slug`, so a replaced picture reaches an old cart
+   * without touching the line. `null` when nothing has been uploaded.
+   */
+  image: Image | null
 }
 
 export interface CartAdjustment {

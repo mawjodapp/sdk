@@ -305,6 +305,8 @@ useProductSearch(initial?: SearchProductsQuery): {
 
 ```vue
 <script setup lang="ts">
+import { imageSrcSet } from '@mawjod/api'
+
 const { hits, meta, search, pending, reset } = useProductSearch({ per_page: 24 })
 
 const term = ref('')
@@ -324,7 +326,10 @@ async function submit() {
   <p v-else-if="meta">{{ meta.total }} results</p>
 
   <ul>
-    <li v-for="hit in hits" :key="hit.id">{{ hit.name_ar }}</li>
+    <li v-for="hit in hits" :key="hit.id">
+      <img v-if="hit.image" v-bind="imageSrcSet(hit.image)" sizes="240px" :alt="hit.image.alt ?? hit.name_ar">
+      {{ hit.name_ar }}
+    </li>
   </ul>
 </template>
 ```
@@ -336,6 +341,12 @@ previous term's result count.
 Hits carry `name_ar` and `name_en`, because the search index stores both locales and does not
 resolve one. `slug` is single: a product has one slug whatever locale you are reading in, so a link
 built from a hit needs no locale check.
+
+`hit.image` is the product's first picture, the same `Image` the catalog returns, so a results grid
+needs no second call for the visible slugs. It is `null` when the product has no picture uploaded,
+which is why the `v-if` above is not decoration. See
+[`search` → Images on hits](/api/search#images-on-hits) for the one-time index rebuild a store needs
+before pictures arrive.
 
 ::: warning The state is shared per app instance
 `query` and `results` live on the Nuxt app instance, so two search widgets on one page share the
