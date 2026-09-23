@@ -24,19 +24,22 @@ jobs:
       - run: pnpm test
       - run: pnpm typecheck
       - run: pnpm -r publish --access public --no-git-checks
-      # The registry once accepted a publish, logged its provenance, answered success, and never
-      # added the version to the packument. A green publish line is not evidence; the packument is.
-      - name: Verify versions exist on the registry
+      # Packuments from one publish run can fan out minutes apart, so a consumer installing right
+      # after a green run can see half the pair. Wait until both are visible; the publish line is
+      # not the evidence, the packument is.
+      - name: Wait for versions to be visible on the registry
         run: |
           version=$(node -p "require('./packages/api/package.json').version")
           for pkg in api nuxt; do
-            for i in $(seq 1 30); do
+            for i in $(seq 1 60); do
               if curl -sf "https://registry.npmjs.org/@mawjod%2F$pkg" | grep -q "\"$version\":{\"name\""; then
-                echo "@mawjod/$pkg@$version is on the registry"
+                echo "@mawjod/$pkg@$version is visible on the registry"
                 continue 2
               fi
               sleep 10
             done
-            echo "@mawjod/$pkg@$version never appeared on the registry" >&2
+            echo "@mawjod/$pkg@$version is not visible on the registry after 10 minutes." >&2
+            echo "That is likely propagation skew rather than a lost publish: check the packument" >&2
+            echo "before republishing, since the version may appear on its own." >&2
             exit 1
           done
