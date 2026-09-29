@@ -34,7 +34,7 @@ const shipping = await mawjod.fulfillment.quotes({
 })
 
 shipping.fee                      // Money
-shipping.eta                      // { minimum_minutes, maximum_minutes }
+shipping.eta                      // { minimum_minutes, maximum_minutes, unit, minimum, maximum }
 shipping.free_threshold_applied   // boolean
 shipping.allowed_payment_methods  // string[]
 ```
@@ -234,14 +234,28 @@ Every checkout failure has a `code`. Branch on it and nothing else.
 | --- | --- | --- | --- |
 | `cart_price_changed` | 409 | Prices moved since the cart was priced. | Refetch, show the change, fresh `place()`. |
 | `cart_not_purchasable` | 409 | A line can no longer be sold. | Refetch, show the change, fresh `place()`. |
-| `insufficient_stock` | 409 | Not enough stock for a line. | Refetch, show the change, fresh `place()`. |
+| `insufficient_stock` | 409 | Not enough stock for one or more lines; `variant_ids` names every one. | Refetch, show the change, fresh `place()`. |
 | `cart_empty` | 422 | Nothing to order. | Send the buyer to the catalog. |
 | `cart_not_found` | 422 | No cart for this caller. | Send the buyer to the catalog. |
 | `payment_method_unavailable` | 422 | The chosen method is not offered here. | Re-read the allowed set and let them choose again. |
+| `order_below_minimum` | 422 | The items subtotal is under the shop's minimum. | Name the minimum and send them back to the cart. |
+| `order_above_maximum` | 422 | The items subtotal is over the shop's maximum. | Name the maximum and send them back to the cart. |
+| `outside_ordering_hours` | 422 | Ordering is on, but the shop is closed at this hour. | Ask them to come back later; keep the cart. |
+| `ordering_disabled` | 422 | The owner has switched ordering off. | Say the shop is not taking orders right now. |
 | `customer_not_verified` | 403 | Signed in, identity not verified, on a store that requires verification. | Verification screen, not the cart. |
 
 Read as a rule: 409 means refetch, 422 means rewrite the request, 403 means send them to
-verification.
+verification. The four ordering-rule 422s bend that rule, since no rewrite of the request clears
+them. Below or above a bound, the shopper changes the cart; outside hours, they come back later;
+switched off, they wait for the owner.
+
+Name the bound in the message. `ordering.minimum_minor` and `ordering.maximum_minor` are public
+settings in minor units, so format them with `formatMoney` rather than reading the figure out of
+`detail`. See [Checkout → Ordering rules](/api/checkout#ordering-rules).
+
+`insufficient_stock` carries `variant_ids`, every short variant rather than the first one found.
+They match the cart lines already marked `in_stock: false`, so highlight all of them after the
+refetch.
 
 `customer_not_verified` is conditional on the store. `auth.customer_verification_required` is off by
 default, and while it is off an unverified customer places orders like anyone else and this code
@@ -254,7 +268,7 @@ Two guards cover the whole family:
 import { isCheckoutError, isStaleCartError } from '@mawjod/api'
 
 isStaleCartError(error) // the three 409s
-isCheckoutError(error)  // all seven
+isCheckoutError(error)  // all eleven
 ```
 
 `error.detail` never contains quantities, prices or addresses. It is prose written for a person and

@@ -49,8 +49,9 @@ A filter sidebar does not have to reconstruct the set from hits or facets.
 
 ::: danger `filter` is prohibited
 Search does not accept `filter[…]` at all. Neither does it accept `store_id`, `published` or
-`in_stock`. Sending any of them is `422 validation_failed`, not an ignored parameter: the public
-index is already scoped to published, in-stock, current-store.
+`in_stock`. Sending any of them is `422 validation_failed`, not an ignored parameter. Every search
+is already scoped to the current store and to published products, and to in-stock ones while the
+shop's `catalog.hide_out_of_stock` is on (the default).
 
 This is the opposite of [`catalog`](/api/catalog), which requires `filter` to narrow. Do not copy a
 query object from one to the other.
@@ -73,8 +74,13 @@ interface SearchProductHit {
   category: SearchTaxonomyRef
   from_price: Money
   image: Image | null
+  in_stock: boolean
 }
 ```
+
+`in_stock` means what it means on a [`ProductSummary`](/api/catalog#productsummary). With
+`catalog.hide_out_of_stock` on, every hit carries `true`. With it off, sold-out products come back
+too, carrying `false`, and a result row should say so.
 
 A hit is deliberately not a `ProductSummary`. The search index stores both names side by side and
 does not resolve one, so you pick:

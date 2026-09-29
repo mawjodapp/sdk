@@ -66,9 +66,19 @@ interface FulfillmentQuote {
   minimum_order: Money
   free_threshold: Money | null
   free_threshold_applied: boolean
-  eta: { minimum_minutes: number; maximum_minutes: number }
+  eta: DeliveryEstimate    // { minimum_minutes, maximum_minutes, unit, minimum, maximum }
   allowed_payment_methods: string[]
 }
+```
+
+A delivery `eta` is the zone's estimate plus the shop's preparation time, and it always falls inside
+the [`delivery_estimate`](/api/store#delivery-estimate) the store profile publishes. Show `minimum`
+and `maximum` in `unit`. When the preparation time does not divide into the zone's unit, `unit`
+steps down to hours or minutes rather than rounding:
+
+```ts
+{ minimum_minutes: 45, maximum_minutes: 90, unit: 'minute', minimum: 45, maximum: 90 }
+{ minimum_minutes: 60, maximum_minutes: 180, unit: 'hour', minimum: 1, maximum: 3 }
 ```
 
 `free_threshold` is `null` when the store has no free-delivery threshold at all. Do not render a

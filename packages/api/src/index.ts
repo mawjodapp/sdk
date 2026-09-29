@@ -32,6 +32,7 @@ export {
 export type {
   CheckoutErrorCode,
   MawjodErrorCode,
+  OrderingRuleErrorCode,
   PayloadIntegrityResource,
   ProblemDocument,
   StaleCartErrorCode,

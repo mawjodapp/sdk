@@ -108,8 +108,9 @@ filter value narrows both readings of the list.
 ## Search is a different contract
 
 `GET /search/products` does not accept `filter` at all. Sending `filter[...]`, `store_id`,
-`published` or `in_stock` is a `422`, not an ignored parameter: the public index is already scoped
-to published, in-stock, current-store.
+`published` or `in_stock` is a `422`, not an ignored parameter. Every search is already scoped to
+the current store and to published products, and to in-stock ones while the shop's
+`catalog.hide_out_of_stock` is on (the default).
 
 Its parameters are flat:
 

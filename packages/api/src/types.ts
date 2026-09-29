@@ -94,6 +94,14 @@ export interface StoreInfo {
     logo: Image | null
     icon: Image | null
   }
+  /**
+   * The delivery time to show before the shopper has given an address: the fastest switched-on
+   * zone's minimum to the slowest one's maximum, preparation time included in both bounds. Every
+   * delivery quote falls inside it, and the quote is the exact answer once there is an address.
+   *
+   * `null` while no delivery zone is switched on.
+   */
+  delivery_estimate: DeliveryEstimate | null
 }
 
 export interface StoreSettingEntry {
@@ -207,7 +215,13 @@ export interface Variant {
   price: Money
   /** Always an array, never `null` and never absent. Empty is the ordinary case. */
   images: Image[]
+  /** The vendor's switch. `false` means switched off, and adding it to a cart is refused. */
   available: boolean
+  /**
+   * Whether a shopper can buy it now: switched on, with a unit not already held by a checkout. A
+   * variant can be `available` and still not `in_stock`. The number left is never published.
+   */
+  in_stock: boolean
 }
 
 export interface ProductSummary {
@@ -222,6 +236,12 @@ export interface ProductSummary {
   /** The product's lead image, or `null` when it has none. */
   image: Image | null
   variants_count: number
+  /**
+   * Whether any variant can be bought now. While the shop's `catalog.hide_out_of_stock` is on (the
+   * default) a product with none is left out of lists and search, but its own page still answers
+   * with `false`.
+   */
+  in_stock: boolean
   published_at: string | null
 }
 
@@ -301,6 +321,8 @@ export interface SearchProductHit {
    * so `imageSrcSet` works on it like on any card. `null` when the product has no picture uploaded.
    */
   image: Image | null
+  /** As on `ProductSummary`. Only ever `false` while the shop has `catalog.hide_out_of_stock` off. */
+  in_stock: boolean
 }
 
 export interface MediaVariant {
@@ -392,6 +414,11 @@ export interface CartLine {
   unit_price: Money
   line_total: Money
   purchasable: boolean
+  /**
+   * Whether stock on hand covers this line's quantity right now. `false` is the line a checkout
+   * would name in `insufficient_stock`'s `variant_ids`.
+   */
+  in_stock: boolean
   /**
    * The address of the product page behind the line, for a link to `/products/{product_slug}`.
    * Read off the catalogue on every cart projection rather than snapshotted when the line was
@@ -574,6 +601,19 @@ export interface EtaWindow {
   maximum_minutes: number
 }
 
+export type EstimateUnit = 'minute' | 'hour' | 'day'
+
+/**
+ * A delivery time, in minutes and in the unit to show it in. The minutes are canonical; `minimum`
+ * and `maximum` are the same bounds written whole in `unit`, so a shop delivering in days never
+ * shows anyone 2880.
+ */
+export interface DeliveryEstimate extends EtaWindow {
+  unit: EstimateUnit
+  minimum: number
+  maximum: number
+}
+
 export interface FulfillmentQuote {
   method: FulfillmentMethod
   zone_id: string | null
@@ -584,7 +624,8 @@ export interface FulfillmentQuote {
   minimum_order: Money
   free_threshold: Money | null
   free_threshold_applied: boolean
-  eta: EtaWindow
+  /** The zone's estimate plus the shop's preparation time, inside `StoreInfo.delivery_estimate`. */
+  eta: DeliveryEstimate
   allowed_payment_methods: string[]
 }
 
@@ -693,7 +734,7 @@ export interface OrderFulfillment {
   id: string
   method: FulfillmentMethod
   status: string
-  eta: EtaWindow
+  eta: DeliveryEstimate
 }
 
 export interface OrderHistoryEntry {

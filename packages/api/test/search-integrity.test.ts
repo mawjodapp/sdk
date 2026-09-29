@@ -14,6 +14,7 @@ function hit(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     brand: { id: 'brand-1', name: 'Tefal' },
     category: { id: 'category-1', name: 'Kitchen' },
     from_price: money(129900),
+    in_stock: true,
     image: {
       id: 'img-1',
       url: 'https://cdn.test/shirt.webp',
@@ -59,12 +60,12 @@ describe('search payload integrity guard', () => {
     expect((error as PayloadIntegrityError).requestId).toBe('req-hollow-hit')
   })
 
-  it('passes a hit with no picture through, because only the slug is load-bearing', async () => {
+  it('passes a hit with no picture or no stock through, because only the slug is load-bearing', async () => {
     const { client } = createHarness([
       {
         status: 200,
         body: {
-          data: [hit(), hit({ id: 'hit-2', image: null })],
+          data: [hit(), hit({ id: 'hit-2', image: null, in_stock: false })],
           links: { first: null, last: null, prev: null, next: null },
           meta: {
             request_id: 'req-mixed-images',
@@ -85,5 +86,6 @@ describe('search payload integrity guard', () => {
     expect(results.data[0]?.image?.renditions.thumbnail?.width).toBe(160)
     // A product with nothing uploaded is a normal hit, not a hollow one.
     expect(results.data[1]?.image).toBeNull()
+    expect(results.data[1]?.in_stock).toBe(false)
   })
 })

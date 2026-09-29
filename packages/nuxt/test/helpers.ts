@@ -66,6 +66,7 @@ export function cartFixture(itemCount: number, id = 'cart-1'): Cart {
               unit_price: { minor: 1000, currency: 'EGP', tax_inclusive: true },
               line_total: { minor: itemCount * 1000, currency: 'EGP', tax_inclusive: true },
               purchasable: true,
+              in_stock: true,
               product_slug: 'cotton-shirt',
               image: {
                 id: 'img-1',

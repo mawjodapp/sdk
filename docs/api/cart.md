@@ -59,9 +59,24 @@ interface CartLine {
   unit_price: Money
   line_total: Money
   purchasable: boolean
+  in_stock: boolean
   product_slug: string | null
   image: Image | null
 }
+```
+
+`purchasable` and `in_stock` are two checks. `purchasable: false` means the variant was switched
+off, archived or unpublished after it was added; the line stays so the shopper sees what changed,
+and it counts nothing toward the subtotal. `in_stock: false` means stock on hand does not cover the
+line's quantity right now. Checkout refuses such a cart with `insufficient_stock`, naming exactly
+these lines' variants, so flag them on the cart page before the shopper gets that far:
+
+```ts
+// Buyable
+{ variant_id: 'var-1', quantity: 2, purchasable: true, in_stock: true, /* … */ }
+
+// Still sold, but not two of it right now
+{ variant_id: 'var-2', quantity: 2, purchasable: true, in_stock: false, /* … */ }
 ```
 
 Lines carry both locales, unlike the catalog which resolves one server-side. A stored line therefore

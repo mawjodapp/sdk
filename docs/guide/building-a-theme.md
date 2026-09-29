@@ -257,7 +257,7 @@ const chosen = ref<Variant | null>(null)
 const addError = ref<string | null>(null)
 
 const selected = computed<Variant | null>({
-  get: () => chosen.value ?? product.value?.variants.find((variant) => variant.available) ?? null,
+  get: () => chosen.value ?? product.value?.variants.find((variant) => variant.in_stock) ?? null,
   set: (variant) => { chosen.value = variant },
 })
 
@@ -289,10 +289,10 @@ async function add() {
           type="radio"
           name="variant"
           :value="variant"
-          :disabled="!variant.available"
+          :disabled="!variant.in_stock"
         >
         {{ variant.sku }} — {{ formatMoney(variant.price, 'ar-EG') }}
-        <span v-if="!variant.available">(out of stock)</span>
+        <span v-if="!variant.in_stock">{{ variant.available ? '(sold out)' : '(unavailable)' }}</span>
       </label>
     </fieldset>
 
@@ -322,13 +322,19 @@ arriving or changing after setup never reaches the rendered HTML: a reader witho
 a page with no variant selected and a disabled buy button. A computed evaluates whenever it is
 read, on the server too, and the markup arrives complete.
 
+The picker keys on `in_stock`, not `available`. `available` is only the vendor's switch, and a
+switched-on variant with nothing on hand is refused at checkout. `available` is still worth reading
+for the label: sold out and switched off say different things to a shopper. A product whose
+variants are all out of stock still has this page, with `product.in_stock: false`, even while the
+shop keeps it out of lists and search.
+
 Product detail is addressed by slug, not id. The slug does not change with the locale, so one
 `[slug].vue` route answers in both languages and a shared product link survives a language switch.
 `variants` only appears on the detail response; a `ProductSummary` from a list carries
 `variants_count` and `from_price` instead.
 
 The picker above labels each option with `variant.sku` because there is nothing better. A `Variant`
-is `{ id, sku, barcode, price, available, images }`, with no customer-facing name on it, and
+is `{ id, sku, barcode, price, available, in_stock, images }`, with no customer-facing name on it, and
 `option_selection` on a cart line is reserved and always `{}`. So a shop selling one bottle in
 500ml, 750ml and 1L gets three variants that differ only by id, sku and price, and the API says
 nothing about which is which. The theme has to derive the label itself: from `price` when the sizes
@@ -410,6 +416,7 @@ function nameOf(line: { name_ar: string; name_en: string }) {
         >
         <span>{{ formatMoney(line.line_total, 'ar-EG') }}</span>
         <span v-if="!line.purchasable">Unavailable</span>
+        <span v-else-if="!line.in_stock">Not enough in stock</span>
         <button type="button" @click="removeLine(line.id)">Remove</button>
       </li>
     </ul>
@@ -559,7 +566,7 @@ orders like anyone else. See [Authentication → verification](/guide/authentica
 ## Checkout
 
 The longest screen, and the one with the most rules. It picks a fulfillment method, quotes it,
-reads the payment methods the store offers, places the order, and handles the two kinds of failure
+reads the payment methods the store offers, places the order, and handles each kind of failure
 differently.
 
 ```vue
@@ -579,6 +586,30 @@ const addressId = ref<string | null>(null)
 const pickupLocationId = ref<string | null>(null)
 const paymentMethod = ref<string>('cod')
 const notVerified = ref(false)
+const refusal = ref<string | null>(null)
+
+// The shop's own rules. Refetching clears none of them, so each gets words rather than a retry.
+function describeRefusal(code: string): string | null {
+  const bound = (key: string) => {
+    const minor = settings.value?.settings[key]?.value
+    const currency = latestQuote.value?.discounted_subtotal.currency ?? 'EGP'
+
+    return typeof minor === 'number' ? formatMoney({ minor, currency, tax_inclusive: true }, 'ar-EG') : null
+  }
+
+  switch (code) {
+    case 'order_below_minimum':
+      return `The minimum order is ${bound('ordering.minimum_minor') ?? 'more than this basket'}.`
+    case 'order_above_maximum':
+      return `Orders here go up to ${bound('ordering.maximum_minor') ?? 'less than this basket'}.`
+    case 'outside_ordering_hours':
+      return "We're closed right now. Your basket is saved; come back during opening hours."
+    case 'ordering_disabled':
+      return "This shop isn't taking orders at the moment."
+    default:
+      return null
+  }
+}
 
 // Never hardcode payment methods. The store decides, and a quote can narrow it further.
 const allowedPaymentMethods = computed<string[]>(() => {
@@ -611,6 +642,7 @@ async function submit() {
   if (latestQuote.value === null) return
 
   notVerified.value = false
+  refusal.value = null
 
   try {
     const { order: placed } = await place({
@@ -645,6 +677,10 @@ async function submit() {
 
       return
     }
+
+    refusal.value = isMawjodApiError(error) ? describeRefusal(error.code) : null
+
+    if (refusal.value !== null) return
 
     throw error
   }
@@ -691,17 +727,19 @@ async function submit() {
         <dt>{{ method === 'delivery' ? 'Delivery' : 'Pick-up' }}</dt>
         <dd>{{ formatMoney(lastQuote.fee, 'ar-EG') }}</dd>
         <dt>Ready in</dt>
-        <dd>{{ lastQuote.eta.minimum_minutes }}–{{ lastQuote.eta.maximum_minutes }} minutes</dd>
+        <dd>{{ lastQuote.eta.minimum }}–{{ lastQuote.eta.maximum }} {{ lastQuote.eta.unit }}s</dd>
       </template>
     </dl>
 
     <div v-if="isStale" role="alert">
       <h2>Your basket changed</h2>
-      <p v-if="staleCart?.code === 'insufficient_stock'">Some items are no longer in stock in that quantity.</p>
+      <p v-if="staleCart?.code === 'insufficient_stock'">Some items are no longer in stock in that quantity. They are marked below.</p>
       <p v-else-if="staleCart?.code === 'cart_price_changed'">Some prices have changed.</p>
       <p v-else>Some items can no longer be bought.</p>
       <p>Check the updated basket below, then place the order again.</p>
     </div>
+
+    <p v-if="refusal" role="alert">{{ refusal }}</p>
 
     <div v-if="notVerified" role="alert">
       <p>Verify your account before ordering.</p>

@@ -32,6 +32,15 @@ interface StoreInfo {
     logo: Image | null
     icon: Image | null
   }
+  delivery_estimate: DeliveryEstimate | null
+}
+
+interface DeliveryEstimate {
+  minimum_minutes: number
+  maximum_minutes: number
+  unit: 'minute' | 'hour' | 'day'
+  minimum: number         // minimum_minutes written whole in `unit`
+  maximum: number
 }
 ```
 
@@ -44,6 +53,28 @@ fallback to `name`. See [Branding](#branding) below.
 `default_locale` is the store's own default, which is what the API falls back to when you send no
 `Accept-Language`. It is not necessarily the locale of the response you are holding; read
 `Product.locale` for that.
+
+### Delivery estimate
+
+`delivery_estimate` is the delivery time to show before the shopper has given an address, on a
+product page or in the header. It runs from the fastest switched-on zone's minimum to the slowest
+one's maximum, and the shop's preparation time (`ordering.default_lead_minutes`) is already added to
+both bounds. Every delivery quote falls inside it. Once there is an address, the quote's
+[`eta`](/api/fulfillment#fulfillmentquote) is the exact answer, in the same shape.
+
+```ts
+// At least one delivery zone switched on
+store.delivery_estimate
+// { minimum_minutes: 60, maximum_minutes: 180, unit: 'hour', minimum: 1, maximum: 3 }
+
+// No zone switched on
+store.delivery_estimate // null
+```
+
+Compare and sort on the minutes. Show `minimum` and `maximum` with `unit`: they are the same bounds
+written whole, so a shop that delivers in days shows "1 to 2 days" rather than "1440 to 2880
+minutes". When it is `null` there is no delivery time to promise, so leave the line out rather than
+rendering a placeholder.
 
 ## `store.settings()`
 
@@ -110,6 +141,22 @@ const requiresVerification = settings['auth.customer_verification_required']?.va
 
 When a store turns it on, `checkout.place()` answers `403 customer_not_verified` until the identity
 is verified. See [Authentication → verification](/guide/authentication#verification).
+
+### Ordering rules
+
+```ts
+settings['ordering.enabled']          // boolean; false and checkout answers ordering_disabled
+settings['ordering.minimum_minor']    // number, minor units; 0 is no minimum
+settings['ordering.maximum_minor']    // number | null, minor units; null is no maximum
+settings['catalog.hide_out_of_stock'] // boolean, on by default
+```
+
+Checkout holds the items subtotal to the two bounds, both inclusive, and refuses one outside them
+with `order_below_minimum` or `order_above_maximum`. Read the bound from here to tell the shopper how
+far off they are; see [Ordering rules](/api/checkout#ordering-rules).
+
+`catalog.hide_out_of_stock` decides whether a product with nothing in stock stays in lists and
+search. See [`ProductSummary`](/api/catalog#productsummary).
 
 ### Branding
 

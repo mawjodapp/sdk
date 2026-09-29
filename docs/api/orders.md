@@ -204,7 +204,7 @@ interface OrderFulfillment {
   id: string
   method: 'delivery' | 'pickup'
   status: string
-  eta: { minimum_minutes: number; maximum_minutes: number }
+  eta: DeliveryEstimate   // { minimum_minutes, maximum_minutes, unit, minimum, maximum }
 }
 
 interface OrderHistoryEntry {

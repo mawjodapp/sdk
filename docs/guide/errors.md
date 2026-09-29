@@ -50,9 +50,10 @@ See [the integrity guard](#the-integrity-guard) below.
 
 ## Branch on `code`, never on `detail`
 
-`detail` is prose written for a person. It is reworded without notice, and it deliberately omits
-the specifics: no quantities, no prices, no addresses. Matching on it will break, quietly, on a
-copy edit.
+`detail` is prose written for a person, and it is reworded without notice. Matching on it will
+break, quietly, on a copy edit. Where it does name a figure, as `order_below_minimum` names the
+minimum, that figure has a structured home as well (the store's public settings, here), so read it
+from there.
 
 ```ts
 // Wrong
@@ -92,7 +93,7 @@ import {
 | `isUnauthenticated` | `unauthenticated` (401) |
 | `isForbidden` | `forbidden` (403) |
 | `isStoreUnavailable` | `store_unavailable` (503) |
-| `isCheckoutError` | the seven checkout codes |
+| `isCheckoutError` | the eleven checkout codes |
 | `isStaleCartError` | the three stale-cart codes |
 
 They narrow, so TypeScript knows what you have:
@@ -125,8 +126,9 @@ One `422` catches people out: an `Accept-Language` the API does not accept produ
 `errors.accept_language`. The API takes `ar` and `en`.
 
 Some 422s are not validation failures at all: `cart_empty`, `outside_service_area`,
-`identity_unavailable`, `invalid_identity_challenge`, `evidence_not_an_image` and
-`payment_method_unavailable` all arrive as 422 with their own `code`. Check the code before assuming
+`identity_unavailable`, `invalid_identity_challenge`, `evidence_not_an_image`,
+`payment_method_unavailable` and the four ordering-rule codes all arrive as 422 with their own
+`code`. Check the code before assuming
 `errors` is populated.
 
 ## `store_unavailable` is possible everywhere
@@ -214,6 +216,10 @@ throws for the whole results page, for the same reason a list does.
 | `cart_empty` | 422 | `checkout.place` |
 | `cart_not_found` | 422 | `checkout.place` |
 | `payment_method_unavailable` | 422 | `checkout.place` |
+| `order_below_minimum` | 422 | `checkout.place` |
+| `order_above_maximum` | 422 | `checkout.place` |
+| `outside_ordering_hours` | 422 | `checkout.place` |
+| `ordering_disabled` | 422 | `checkout.place` |
 | `customer_not_verified` | 403 | `checkout.place`, on a store that requires verification |
 | `outside_service_area` | 422 | `fulfillment.quotes` |
 | `identity_unavailable` | 422 | `auth.register` |

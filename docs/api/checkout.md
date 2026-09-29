@@ -139,10 +139,14 @@ would charge someone a price they never agreed to.
 | --- | --- | --- | --- |
 | `cart_price_changed` | 409 | Prices moved | Refetch, show, fresh `place()` |
 | `cart_not_purchasable` | 409 | A line can no longer be sold | Refetch, show, fresh `place()` |
-| `insufficient_stock` | 409 | Not enough stock | Refetch, show, fresh `place()` |
+| `insufficient_stock` | 409 | Not enough stock for one or more lines | Refetch, show, fresh `place()` |
 | `cart_empty` | 422 | Nothing to order | Send them to the catalogue |
 | `cart_not_found` | 422 | No cart for this caller | Send them to the catalogue |
 | `payment_method_unavailable` | 422 | Method not offered here | Re-read the allowed set |
+| `order_below_minimum` | 422 | Items subtotal under the shop's minimum | Say the minimum, back to the cart |
+| `order_above_maximum` | 422 | Items subtotal over the shop's maximum | Say the maximum, back to the cart |
+| `outside_ordering_hours` | 422 | The shop is closed at this hour | Ask them to come back later |
+| `ordering_disabled` | 422 | The owner has switched ordering off | Say the shop is not taking orders |
 | `customer_not_verified` | 403 | Identity not verified, where the store requires it | Verification screen, not the cart |
 
 409 means refetch. 422 means rewrite the request. 403 means route to verification.
@@ -154,11 +158,46 @@ off by default. See [`store.settings()` → Verification](/api/store#verificatio
 import { isCheckoutError, isStaleCartError } from '@mawjod/api'
 
 isStaleCartError(error)  // the three 409s
-isCheckoutError(error)   // all seven
+isCheckoutError(error)   // all eleven
 ```
 
-`error.detail` never contains quantities, prices or addresses. Do not parse it. Compute the diff
-from the refetched cart.
+Do not parse `error.detail`. Compute the diff from the refetched cart.
+
+### Short stock
+
+`insufficient_stock` lists every short variant in `variant_ids`, not only the first:
+
+```ts
+error.problem.variant_ids // ['01916f7a-…', '01916f7a-…']
+```
+
+They are the lines the cart read already marks `in_stock: false`, so after the refetch you can
+highlight each of them at once instead of discovering them one failed attempt at a time.
+
+### Ordering rules
+
+Four 422s come from the shop's own rules rather than from the cart moving. Refetching does not clear
+them, so they are not stale-cart failures and `isStaleCartError` is `false` for each.
+
+`order_below_minimum` and `order_above_maximum` compare the items subtotal against
+`ordering.minimum_minor` and `ordering.maximum_minor`, both inclusive and both in minor units. Name
+the bound: "The minimum order is EGP 200.00, add EGP 35.00 more to continue." Read it from
+[`store.settings()`](/api/store#ordering-rules) and format it with `formatMoney`. The problem's
+`detail` also states it in minor units, but `detail` is prose and is reworded without notice.
+
+`outside_ordering_hours` means ordering is on and the shop is closed at this hour. Tell the shopper
+to come back later and keep the cart as it is. `ordering_disabled` is different: the owner has
+switched ordering off, with no hour when it comes back, so say the shop is not taking orders right
+now rather than promising a time.
+
+```ts
+switch (error.code) {
+  case 'order_below_minimum':    // "The minimum order is EGP 200.00."
+  case 'order_above_maximum':    // "Orders here go up to EGP 5,000.00."
+  case 'outside_ordering_hours': // "We're closed right now. Come back during opening hours."
+  case 'ordering_disabled':      // "This shop isn't taking orders at the moment."
+}
+```
 
 `401 unauthenticated`, `422 validation_failed`, `429 rate_limited` and `503 store_unavailable` apply
 as everywhere else.

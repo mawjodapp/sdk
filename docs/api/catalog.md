@@ -72,11 +72,27 @@ interface ProductSummary {
   from_price: Money         // the cheapest variant's price
   image: Image | null       // the lead image, or null when the product has none
   variants_count: number
+  in_stock: boolean         // whether any variant can be bought now
   published_at: string | null
 }
 ```
 
 The list carries `variants_count`, not the variants themselves. Fetch the detail when you need them.
+
+`in_stock` says whether any variant can be bought now. While the shop's `catalog.hide_out_of_stock`
+setting is on, which it is by default, a product with no in-stock variant leaves this list, the
+category and brand listings, and search. Its own page stays reachable through
+`catalog.products.get()` and answers with `in_stock: false`, so a shared link or a bookmark still
+lands on the product. With the setting off, a sold-out product stays in the list and a card has to
+say so:
+
+```ts
+// In stock
+{ slug: 'cotton-shirt', variants_count: 2, in_stock: true, /* … */ }
+
+// Sold out, listed because the shop has catalog.hide_out_of_stock off
+{ slug: 'linen-shirt', variants_count: 2, in_stock: false, /* … */ }
+```
 
 `image` is the one picture a product card needs, so a list renders without a second request. It is
 `null` for a product nobody has uploaded a photo for, which is a normal state rather than an error.
@@ -115,12 +131,31 @@ interface Variant {
   barcode: string | null
   price: Money
   images: Image[]
-  available: boolean
+  available: boolean   // the vendor's switch
+  in_stock: boolean    // buyable now
 }
 ```
 
-`variant.id` is what `cart.addLine` takes. `available: false` means it cannot be added; adding it
-anyway is `409 variant_not_purchasable`.
+`variant.id` is what `cart.addLine` takes.
+
+`available` and `in_stock` answer different questions. `available` is the vendor's switch and
+nothing else: `false` means the variant is switched off, and adding it is
+`409 variant_not_purchasable`. `in_stock` is whether a shopper can buy it now, which needs the
+switch on and a unit on hand that no checkout is already holding. It comes from the same read the
+checkout reserves against, so a variant shown out of stock is the one an `insufficient_stock`
+refusal would name. The number left is never published.
+
+| `available` | `in_stock` | Show |
+| --- | --- | --- |
+| `true` | `true` | Selectable |
+| `true` | `false` | Sold out |
+| `false` | `false` | Unavailable, or leave it out |
+
+A switched-off variant is never in stock, so the fourth combination does not arrive. Disable the
+buy button on `in_stock`, not on `available`: an `available` variant with nothing on hand is
+refused at checkout.
+
+The product's own `in_stock` is `true` when any of its variants is.
 
 A `Variant` carries no display label in release one. There is no `name`, no `title`, and no option
 map, so nothing on this shape says "500ml" or "large". A picker has to derive its labels from
@@ -349,6 +384,9 @@ Every entry in this listing has at least one visible product behind it. The list
 the same visibility predicate as the public product list, so any `slug` you get back, passed as
 `filter[category]` to `catalog.products.list()`, returns at least one product. A nav entry built
 from this list can never lead to an empty page.
+
+While `catalog.hide_out_of_stock` is on, that predicate includes stock, so a category whose products
+have all sold out leaves the listing until one is back in stock.
 
 ::: info A category can be absent, by design
 A category a vendor created but has not published any products into is not in this listing. It is

@@ -6,7 +6,7 @@ import { useStoreAvailabilityState } from '../internal'
 import type { MawjodAsyncData, MawjodAsyncOptions, StoreAvailabilityState } from '../types'
 import { useMawjodApi } from './client'
 
-/** `GET /store`. Store identity: id, status, the localized name, and the default locale. */
+/** `GET /store`. Store identity, branding, and the delivery estimate to show before an address. */
 export function useStoreInfo(options: MawjodAsyncOptions = {}): MawjodAsyncData<StoreInfo> {
   const api = useMawjodApi()
 

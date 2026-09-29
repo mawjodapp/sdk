@@ -19,6 +19,8 @@ export interface ProblemDocument {
   reason?: string
   /** Present on `deployment_not_ready` (503) from the platform health endpoint. */
   checks?: Record<string, boolean>
+  /** Present on `insufficient_stock` (409): every short variant, not only the first. */
+  variant_ids?: string[]
   [key: string]: unknown
 }
 
@@ -27,6 +29,17 @@ export type StaleCartErrorCode =
   | 'cart_price_changed'
   | 'cart_not_purchasable'
   | 'insufficient_stock'
+
+/**
+ * The shop's own ordering rules, all 422. `ordering_disabled` means the owner switched ordering
+ * off; `outside_ordering_hours` means it is on but closed at this hour. The two bound codes are
+ * the items subtotal against `ordering.minimum_minor` and `ordering.maximum_minor`.
+ */
+export type OrderingRuleErrorCode =
+  | 'ordering_disabled'
+  | 'outside_ordering_hours'
+  | 'order_below_minimum'
+  | 'order_above_maximum'
 
 /**
  * The complete checkout failure family, source-verified against
@@ -38,6 +51,7 @@ export type StaleCartErrorCode =
  */
 export type CheckoutErrorCode =
   | StaleCartErrorCode
+  | OrderingRuleErrorCode
   | 'cart_empty'
   | 'cart_not_found'
   | 'payment_method_unavailable'
@@ -194,6 +208,10 @@ const CHECKOUT_CODES: ReadonlySet<string> = new Set([
   'cart_not_found',
   'payment_method_unavailable',
   'customer_not_verified',
+  'ordering_disabled',
+  'outside_ordering_hours',
+  'order_below_minimum',
+  'order_above_maximum',
 ])
 
 export function isMawjodApiError(error: unknown): error is MawjodApiError {

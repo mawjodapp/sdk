@@ -113,6 +113,15 @@ interface EtaWindow {
   maximum_minutes: number
 }
 
+type EstimateUnit = 'minute' | 'hour' | 'day'
+
+// A quote's and an order's `eta`, and `StoreInfo.delivery_estimate`
+interface DeliveryEstimate extends EtaWindow {
+  unit: EstimateUnit
+  minimum: number   // minimum_minutes written whole in `unit`
+  maximum: number
+}
+
 interface OperatingWindow {
   day: number      // 0 to 6
   opens: string    // "HH:MM"

@@ -105,10 +105,11 @@ const { data: store, pending, error } = await useStoreInfo()
 </template>
 ```
 
-`StoreInfo` is `{ id, status, name, default_locale, branding }`. `name` is already localized by the
-server. `branding.logo` and `branding.icon` are resolved images, each `null` until the store
-uploads one, so bind the logo through `imageSrcSet()` and fall back to `name`. See
-[`store`](/api/store).
+`StoreInfo` is `{ id, status, name, default_locale, branding, delivery_estimate }`. `name` is
+already localized by the server. `branding.logo` and `branding.icon` are resolved images, each
+`null` until the store uploads one, so bind the logo through `imageSrcSet()` and fall back to
+`name`. `delivery_estimate` is the delivery time to show before the shopper has an address, or
+`null` while no delivery zone is switched on. See [`store`](/api/store#delivery-estimate).
 
 The helper serves the generated rendition sizes on its own; a logo uploaded before the encoder
 shipped keeps an empty rendition map until the store reprocesses it and renders as the original.
@@ -711,6 +712,12 @@ a `try`/`catch`:
   <p v-else>Some items can no longer be bought.</p>
 </div>
 ```
+
+On `insufficient_stock`, `staleCart.problem.variant_ids` names every short variant, so the refetched
+cart can mark all of those lines at once. The four ordering-rule refusals (`order_below_minimum`,
+`order_above_maximum`, `outside_ordering_hours`, `ordering_disabled`) leave `staleCart` alone and
+land in `error`: refetching clears none of them. See
+[Checkout → Ordering rules](/api/checkout#ordering-rules).
 
 `reset()` clears the attempt, the result, the stored input, `staleCart` and the error. Call it when
 the shopper leaves the checkout page.

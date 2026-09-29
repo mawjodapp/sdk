@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   isCheckoutError,
   isMawjodApiError,
+  isStaleCartError,
   isStoreUnavailable,
   isValidationError,
   MawjodApiError,
@@ -44,6 +45,42 @@ describe('error mapping', () => {
     expect(isValidationError(error)).toBe(false)
     expect(isCheckoutError(error)).toBe(true)
   })
+
+  it('names every short variant on insufficient_stock', async () => {
+    const { client } = createHarness([
+      {
+        status: 409,
+        contentType: 'application/problem+json',
+        body: problem(409, 'insufficient_stock', { variant_ids: ['var-1', 'var-2'] }),
+      },
+    ])
+
+    const error = (await client.cart.get().catch((thrown: unknown) => thrown)) as MawjodApiError
+
+    expect(isStaleCartError(error)).toBe(true)
+    expect(error.problem.variant_ids).toEqual(['var-1', 'var-2'])
+  })
+
+  it.each([
+    'ordering_disabled',
+    'outside_ordering_hours',
+    'order_below_minimum',
+    'order_above_maximum',
+  ])(
+    'treats %s as a checkout refusal, not a stale cart or a field error',
+    async (code) => {
+      const { client } = createHarness([
+        { status: 422, contentType: 'application/problem+json', body: problem(422, code) },
+      ])
+
+      const error = await client.cart.get().catch((thrown: unknown) => thrown)
+
+      // Refetching the cart changes nothing here: the shop's rules refused it, not a moved price.
+      expect(isCheckoutError(error)).toBe(true)
+      expect(isStaleCartError(error)).toBe(false)
+      expect(isValidationError(error)).toBe(false)
+    },
+  )
 
   it('surfaces store_unavailable through onError as well as the throw', async () => {
     const { client, reported } = createHarness([

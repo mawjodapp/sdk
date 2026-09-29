@@ -19,6 +19,7 @@ import {
   isStaleCartError,
   type CheckoutErrorCode,
   type MawjodErrorCode,
+  type OrderingRuleErrorCode,
   type ProblemDocument,
   type StaleCartErrorCode,
 } from '@mawjod/api'
@@ -111,7 +112,7 @@ On a list or a results page, one bad row throws for the whole page.
 | `isUnauthenticated(e)` | `MawjodApiError` | `code === 'unauthenticated'` |
 | `isForbidden(e)` | `MawjodApiError` | `code === 'forbidden'` |
 | `isStoreUnavailable(e)` | `MawjodApiError` | `code === 'store_unavailable'` |
-| `isCheckoutError(e)` | `MawjodApiError & { code: CheckoutErrorCode }` | the seven checkout codes |
+| `isCheckoutError(e)` | `MawjodApiError & { code: CheckoutErrorCode }` | the eleven checkout codes |
 | `isStaleCartError(e)` | `MawjodApiError & { code: StaleCartErrorCode }` | the three stale-cart codes |
 
 ## `ProblemDocument`
@@ -128,6 +129,7 @@ interface ProblemDocument {
   errors?: Record<string, string[]>   // present on 422
   reason?: string                     // present on some 409s, e.g. pricing_conflict -> 'expired'
   checks?: Record<string, boolean>    // present on deployment_not_ready
+  variant_ids?: string[]              // present on insufficient_stock: every short variant
   [key: string]: unknown
 }
 ```
@@ -143,8 +145,15 @@ type StaleCartErrorCode =
   | 'cart_not_purchasable'
   | 'insufficient_stock'
 
+type OrderingRuleErrorCode =
+  | 'ordering_disabled'
+  | 'outside_ordering_hours'
+  | 'order_below_minimum'
+  | 'order_above_maximum'
+
 type CheckoutErrorCode =
   | StaleCartErrorCode
+  | OrderingRuleErrorCode
   | 'cart_empty'
   | 'cart_not_found'
   | 'payment_method_unavailable'
@@ -177,6 +186,10 @@ type MawjodErrorCode =
   | 'deployment_not_ready'
   | (string & {})
 ```
+
+`OrderingRuleErrorCode` is the shop's own rules refusing a checkout: switched off, closed at this
+hour, or an items subtotal outside the minimum and maximum. See
+[Checkout → Ordering rules](/api/checkout#ordering-rules).
 
 `customer_not_verified` is conditional. It arrives only from a store that has turned on
 `auth.customer_verification_required`, which is off by default. See
@@ -225,7 +238,7 @@ createMawjodClient({
 | 404 | `not_found` |
 | 409 | The world moved, or a window closed. Refetch. |
 | 419 | CSRF mismatch. Handled internally: refresh once, replay once. |
-| 422 | Validation, or a named refusal like `outside_service_area` |
+| 422 | Validation, or a named refusal like `outside_service_area` or `order_below_minimum` |
 | 429 | `rate_limited` |
 | 503 | `store_unavailable`, `search_unavailable`, `payment_provider_unavailable`, `deployment_not_ready` |
 

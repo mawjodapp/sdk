@@ -6,7 +6,8 @@ import type { SearchProductHit, SearchResults } from '../types.js'
  * Search takes flat pagination and no `filter` at all.
  *
  * `filter`, `store_id`, `published` and `in_stock` are *prohibited*. Sending one is a 422, not an
- * ignored parameter. The public index is already scoped to published, in-stock, current-store.
+ * ignored parameter. Every search is already scoped to the current store and to published products,
+ * and to in-stock ones while the shop's `catalog.hide_out_of_stock` is on (the default).
  */
 export type SearchProductsQuery = {
   /** Arabic or English, up to 120 characters. An exact SKU or barcode ranks first. */
