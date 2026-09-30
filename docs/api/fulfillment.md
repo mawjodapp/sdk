@@ -14,8 +14,8 @@ mawjod.fulfillment.pickupLocations()
 quotes(input: FulfillmentQuoteInput): Promise<FulfillmentQuote>
 ```
 
-`POST /api/v1/customer/fulfillment/quotes`. Prices a delivery or a pickup and returns the ETA plus
-the payment methods allowed for it.
+`POST /api/v1/customer/fulfillment/quotes`. Prices a delivery or a pickup and returns the ETA, when
+the zone promises one, plus the payment methods allowed for it.
 
 ```ts
 interface FulfillmentQuoteInput {
@@ -66,19 +66,37 @@ interface FulfillmentQuote {
   minimum_order: Money
   free_threshold: Money | null
   free_threshold_applied: boolean
-  eta: DeliveryEstimate    // { minimum_minutes, maximum_minutes, unit, minimum, maximum }
+  eta: DeliveryEstimate | null   // { minimum_minutes, maximum_minutes, unit, minimum, maximum }
   allowed_payment_methods: string[]
 }
 ```
 
-A delivery `eta` is the zone's estimate plus the shop's preparation time, and it always falls inside
-the [`delivery_estimate`](/api/store#delivery-estimate) the store profile publishes. Show `minimum`
-and `maximum` in `unit`. When the preparation time does not divide into the zone's unit, `unit`
-steps down to hours or minutes rather than rounding:
+`eta` is `null` when the zone serving the address promises no delivery time. A shop can set a zone
+up that way on purpose, so say nothing about timing rather than making a figure up. It is the same
+rule as [`delivery_estimate`](/api/store#delivery-estimate). A pickup quote always has one.
 
 ```ts
-{ minimum_minutes: 45, maximum_minutes: 90, unit: 'minute', minimum: 45, maximum: 90 }
+// The zone promises a time
+quote.eta // { minimum_minutes: 45, maximum_minutes: 90, unit: 'minute', minimum: 45, maximum: 90 }
+
+// The zone promises none
+quote.eta // null
+```
+
+When it is there, a delivery `eta` is the zone's estimate plus the shop's preparation time, and it
+falls inside the `delivery_estimate` the store profile publishes. Show `minimum` and `maximum` in
+`unit`. When the preparation time does not divide into the zone's unit, `unit` steps down to hours
+or minutes rather than rounding:
+
+```ts
 { minimum_minutes: 60, maximum_minutes: 180, unit: 'hour', minimum: 1, maximum: 3 }
+```
+
+Guard the read. `quote.eta.minimum` throws on a quote from a zone with no promise:
+
+```ts
+const deliveryTime = quote.eta && `${quote.eta.minimum}–${quote.eta.maximum} ${quote.eta.unit}s`
+// '45–90 minutes', or null: leave the line out
 ```
 
 `free_threshold` is `null` when the store has no free-delivery threshold at all. Do not render a

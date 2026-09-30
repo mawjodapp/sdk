@@ -96,10 +96,11 @@ export interface StoreInfo {
   }
   /**
    * The delivery time to show before the shopper has given an address: the fastest switched-on
-   * zone's minimum to the slowest one's maximum, preparation time included in both bounds. Every
-   * delivery quote falls inside it, and the quote is the exact answer once there is an address.
+   * zone's minimum to the slowest one's maximum, counting only zones that promise a time, with
+   * preparation time included in both bounds. Every quote that promises a time falls inside it,
+   * and the quote is the exact answer once there is an address.
    *
-   * `null` while no delivery zone is switched on.
+   * `null` while no switched-on zone promises a delivery time, including when none is switched on.
    */
   delivery_estimate: DeliveryEstimate | null
 }
@@ -624,8 +625,11 @@ export interface FulfillmentQuote {
   minimum_order: Money
   free_threshold: Money | null
   free_threshold_applied: boolean
-  /** The zone's estimate plus the shop's preparation time, inside `StoreInfo.delivery_estimate`. */
-  eta: DeliveryEstimate
+  /**
+   * The zone's estimate plus the shop's preparation time, inside `StoreInfo.delivery_estimate`.
+   * `null` when the serving zone promises no delivery time: show no delivery-time line.
+   */
+  eta: DeliveryEstimate | null
   allowed_payment_methods: string[]
 }
 
@@ -734,7 +738,8 @@ export interface OrderFulfillment {
   id: string
   method: FulfillmentMethod
   status: string
-  eta: DeliveryEstimate
+  /** `null` when the order was quoted by a zone that promises no delivery time. */
+  eta: DeliveryEstimate | null
 }
 
 export interface OrderHistoryEntry {

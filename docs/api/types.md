@@ -115,7 +115,7 @@ interface EtaWindow {
 
 type EstimateUnit = 'minute' | 'hour' | 'day'
 
-// A quote's and an order's `eta`, and `StoreInfo.delivery_estimate`
+// A quote's and an order's `eta`, and `StoreInfo.delivery_estimate`. Each of those is nullable.
 interface DeliveryEstimate extends EtaWindow {
   unit: EstimateUnit
   minimum: number   // minimum_minutes written whole in `unit`

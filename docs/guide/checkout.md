@@ -10,7 +10,7 @@ A guest can hold a cart; they cannot place an order.
 
 ```
 cart.quote()                 price what the buyer is about to confirm
-fulfillment.quotes()         delivery or pickup fee and ETA
+fulfillment.quotes()         delivery or pickup fee, and the ETA when the zone promises one
 store.settings()             which payment methods this store offers
 checkout.place()             creates the order
 orders.pay()                 only when the method needs a provider redirect
@@ -34,9 +34,17 @@ const shipping = await mawjod.fulfillment.quotes({
 })
 
 shipping.fee                      // Money
-shipping.eta                      // { minimum_minutes, maximum_minutes, unit, minimum, maximum }
+shipping.eta                      // { minimum_minutes, maximum_minutes, unit, minimum, maximum } or null
 shipping.free_threshold_applied   // boolean
 shipping.allowed_payment_methods  // string[]
+```
+
+`shipping.eta` is `null` when the zone promises no delivery time. Show the time only when it is
+there, and say nothing otherwise:
+
+```ts
+shipping.eta // { minimum_minutes: 45, maximum_minutes: 90, unit: 'minute', minimum: 45, maximum: 90 }
+shipping.eta // null: no delivery-time line
 ```
 
 For pickup, pass `method: 'pickup'` and `pickup_location_id` instead. For a buyer who has not saved

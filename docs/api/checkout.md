@@ -209,7 +209,9 @@ as everywhere else.
 line and an empty one is a lost payload arriving as a valid `201`. See
 [Errors → the integrity guard](/guide/errors#the-integrity-guard).
 
-The `Order` shape is documented on [`orders`](/api/orders#order).
+The `Order` shape is documented on [`orders`](/api/orders#order). Its `fulfillment.eta` and the
+`quote` snapshot's `eta` are `null` when the zone that quoted the order promises no delivery time,
+so the confirmation screen shows a delivery time only when there is one.
 
 ## In Nuxt
 

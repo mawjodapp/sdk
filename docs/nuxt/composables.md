@@ -109,7 +109,7 @@ const { data: store, pending, error } = await useStoreInfo()
 already localized by the server. `branding.logo` and `branding.icon` are resolved images, each
 `null` until the store uploads one, so bind the logo through `imageSrcSet()` and fall back to
 `name`. `delivery_estimate` is the delivery time to show before the shopper has an address, or
-`null` while no delivery zone is switched on. See [`store`](/api/store#delivery-estimate).
+`null` while no switched-on zone promises a delivery time. See [`store`](/api/store#delivery-estimate).
 
 The helper serves the generated rendition sizes on its own; a logo uploaded before the encoder
 shipped keeps an empty rendition map until the store reprocesses it and renders as the original.
@@ -842,6 +842,10 @@ async function priceIt() {
 
 `lastQuote.allowed_payment_methods` is the narrowest correct source for which payment methods to
 offer, because a particular pickup point may accept less than the store does in general.
+
+`lastQuote.eta` is `null` when the zone promises no delivery time. Render the time behind a
+`v-if="lastQuote.eta"` and leave the line out otherwise. See
+[`FulfillmentQuote`](/api/fulfillment#fulfillmentquote) for both shapes.
 
 ::: tip It fetches on setup
 Pass `{ immediate: false }` when a page only needs `quote()`:

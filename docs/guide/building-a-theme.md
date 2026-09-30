@@ -726,8 +726,10 @@ async function submit() {
       <template v-if="lastQuote">
         <dt>{{ method === 'delivery' ? 'Delivery' : 'Pick-up' }}</dt>
         <dd>{{ formatMoney(lastQuote.fee, 'ar-EG') }}</dd>
-        <dt>Ready in</dt>
-        <dd>{{ lastQuote.eta.minimum }}–{{ lastQuote.eta.maximum }} {{ lastQuote.eta.unit }}s</dd>
+        <template v-if="lastQuote.eta">
+          <dt>Ready in</dt>
+          <dd>{{ lastQuote.eta.minimum }}–{{ lastQuote.eta.maximum }} {{ lastQuote.eta.unit }}s</dd>
+        </template>
       </template>
     </dl>
 

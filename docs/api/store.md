@@ -58,16 +58,17 @@ fallback to `name`. See [Branding](#branding) below.
 
 `delivery_estimate` is the delivery time to show before the shopper has given an address, on a
 product page or in the header. It runs from the fastest switched-on zone's minimum to the slowest
-one's maximum, and the shop's preparation time (`ordering.default_lead_minutes`) is already added to
-both bounds. Every delivery quote falls inside it. Once there is an address, the quote's
-[`eta`](/api/fulfillment#fulfillmentquote) is the exact answer, in the same shape.
+one's maximum, counting only zones that promise a delivery time, and the shop's preparation time
+(`ordering.default_lead_minutes`) is already added to both bounds. Every quote that promises a time
+falls inside it. Once there is an address, the quote's [`eta`](/api/fulfillment#fulfillmentquote)
+is the exact answer, in the same shape, and it is `null` from a zone that promises none.
 
 ```ts
-// At least one delivery zone switched on
+// At least one switched-on zone promises a time
 store.delivery_estimate
 // { minimum_minutes: 60, maximum_minutes: 180, unit: 'hour', minimum: 1, maximum: 3 }
 
-// No zone switched on
+// No switched-on zone promises a time, or none is switched on
 store.delivery_estimate // null
 ```
 

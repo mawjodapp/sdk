@@ -204,7 +204,7 @@ interface OrderFulfillment {
   id: string
   method: 'delivery' | 'pickup'
   status: string
-  eta: DeliveryEstimate   // { minimum_minutes, maximum_minutes, unit, minimum, maximum }
+  eta: DeliveryEstimate | null   // { minimum_minutes, maximum_minutes, unit, minimum, maximum }
 }
 
 interface OrderHistoryEntry {
@@ -226,6 +226,14 @@ their shape, so the SDK types them as `Record<string, unknown> | null` and
 `payment` and `fulfillment` are both nullable. A freshly placed order can carry `null` for either
 while the server is still assembling them, so do not assume they are there on the confirmation
 screen.
+
+`fulfillment.eta`, and `eta` inside the `quote` snapshot, are `null` when the order was quoted by a
+zone that promises no delivery time. Show the delivery time only when it is there:
+
+```ts
+order.fulfillment?.eta // { minimum_minutes: 45, maximum_minutes: 90, unit: 'minute', minimum: 45, maximum: 90 }
+order.fulfillment?.eta // null: the zone promised no time, so show none
+```
 
 `unit_price` on a line is frozen at placement. The catalogue price may have moved since, and the
 order is the record of what was agreed.
