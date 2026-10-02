@@ -19,7 +19,7 @@ const distDir = fileURLToPath(new URL('../dist/runtime/composables', import.meta
 const BUILD_FIRST = `No declarations under ${distDir}. Run \`pnpm build\` first.`
 
 /**
- * The floor. There are 22 exported composables today; 17 leaves room to retire a few without
+ * The floor. There are 26 exported composables today; 17 leaves room to retire a few without
  * editing this test, while an empty, half-written or missing `dist/` falls straight through it.
  * Without the floor, the `any` assertion would pass on zero signatures — vacuously green.
  */

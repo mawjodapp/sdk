@@ -794,6 +794,46 @@ the cart it bought, and the client has already cleared the stored token. Nobody 
 afterwards. Render the confirmation from `order`: reading it again needs that account signed in.
 See [`guest.checkout`](/api/guest#guest-checkout).
 
+## `useWinCampaign()`
+
+```ts
+useWinCampaign(): {
+  product: Ref<WinProduct | null>
+  claimed: Ref<WinClaim | null>
+  pending: Ref<boolean>
+  error: Ref<unknown>
+  checkEligibility: (input: WinCodeInput) => Promise<WinProduct>
+  claim: (input: WinClaimInput) => Promise<WinClaim>
+  reset: () => void
+}
+```
+
+`/campaign/win`, while the store has `campaigns.win_enabled` on. `checkEligibility()` sets `product`
+so the review form can name it; `claim()` sets `claimed`, the coupon and prize.
+
+```vue
+<script setup lang="ts">
+const { product, claimed, pending, checkEligibility, claim } = useWinCampaign()
+
+// A claim has no replay: leaving mid-claim can lose the only copy of the coupon.
+function holdPage(event: BeforeUnloadEvent) {
+  if (pending.value) event.preventDefault()
+}
+
+onMounted(() => window.addEventListener('beforeunload', holdPage))
+onBeforeUnmount(() => window.removeEventListener('beforeunload', holdPage))
+</script>
+
+<template>
+  <p v-if="claimed">Your code: <strong>{{ claimed.coupon_code }}</strong></p>
+</template>
+```
+
+There is no `retry()`. A claim carries no idempotency key, so resending one after a dropped
+connection is answered `win_code_not_accepted` even when the first one won. Refusals land in
+`error`; see [`campaign` → Refusals](/api/campaign#refusals) for the words to show, and keep the
+`win_code_not_accepted` message vague.
+
 ## `useOrders()`
 
 ```ts

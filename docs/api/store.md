@@ -178,6 +178,16 @@ A theme that calls a switched-off surface anyway gets `403 guest_checkout_disabl
 `403 otp_signin_disabled`. See [`guest`](/api/guest) and
 [`auth` → Sign-in by code](/api/auth#sign-in-by-code).
 
+### Win campaign
+
+```ts
+settings['campaigns.win_enabled']   // boolean
+```
+
+Off by default. On, a buyer can trade a product code and a review for a coupon on the win page; off,
+both win calls answer `403 win_campaign_disabled`. Link the page only when it is on. See
+[`campaign`](/api/campaign).
+
 ### Ordering rules
 
 ```ts

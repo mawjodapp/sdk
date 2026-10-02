@@ -132,7 +132,8 @@ export interface StoreSettingEntry {
  * `checkout.guest_enabled` (boolean, off by default) opens `/guest/*`, so a shopper who is not
  * signed in can place a cash order. It only takes effect while
  * `auth.customer_verification_required` is off. `auth.otp_signin_enabled` (boolean, off by default)
- * offers sign-in by a six-digit code beside the password.
+ * offers sign-in by a six-digit code beside the password. `campaigns.win_enabled` (boolean, off by
+ * default) opens the win page routes under `campaign.win`.
  */
 export interface StoreSettings {
   settings: Record<string, StoreSettingEntry>
@@ -780,6 +781,38 @@ export interface Order {
  * never says whether the email already had an account.
  */
 export type GuestOrder = Omit<Order, 'customer'> & { customer: null }
+
+/* -------------------------------------------------------------------------- */
+/* Win campaign                                                                */
+/* -------------------------------------------------------------------------- */
+
+/** The product a win code belongs to, both names, for the review prompt. */
+export interface WinProduct {
+  id: string
+  name_ar: string
+  name_en: string
+}
+
+export interface WinEligibility {
+  product: WinProduct
+}
+
+/**
+ * `percentage` carries `value` in basis points (1500 = 15%); `fixed_amount` in minor units of the
+ * store currency.
+ */
+export interface WinPrize {
+  name_ar: string
+  name_en: string
+  type: 'percentage' | 'fixed_amount'
+  value: number
+}
+
+export interface WinClaim {
+  /** Single-use and redeemable by whoever holds it. Shown here once; the shopper cannot read it again. */
+  coupon_code: string
+  prize: WinPrize
+}
 
 /**
  * A short-lived, single-use provider redirect. Never persisted server-side, so it cannot be

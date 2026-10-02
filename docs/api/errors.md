@@ -160,6 +160,13 @@ type CheckoutErrorCode =
   | 'customer_not_verified'
   | 'guest_checkout_disabled'
 
+type WinCampaignErrorCode =
+  | 'win_campaign_disabled'
+  | 'win_code_not_accepted'
+  | 'win_phone_not_eligible'
+  | 'win_daily_limit_reached'
+  | 'win_pool_empty'
+
 type MawjodErrorCode =
   | 'unauthenticated'
   | 'forbidden'
@@ -169,6 +176,7 @@ type MawjodErrorCode =
   | 'not_found'
   | 'untrusted_host'
   | CheckoutErrorCode
+  | WinCampaignErrorCode
   | 'variant_not_purchasable'
   | 'pricing_conflict'
   | 'outside_service_area'
@@ -201,6 +209,10 @@ hour, or an items subtotal outside the minimum and maximum. See
 or while verification is required. `otp_signin_disabled` (403) answers both sign-in-by-code calls
 while `auth.otp_signin_enabled` is off. Both are settings a theme reads up front, so neither should
 reach a shopper. See [`store.settings()` → Guest checkout and sign-in by code](/api/store#guest-checkout-and-sign-in-by-code).
+
+`WinCampaignErrorCode` is the win page's refusals. `win_code_not_accepted` covers a code that never
+existed and one already used, on purpose, so its message has to stay vague. See
+[`campaign` → Refusals](/api/campaign#refusals) for what a page says for each.
 
 `untrusted_host` is a `400` refused before the endpoint ran: the request's `Host` header is not in
 the deployment's `TRUSTED_HOSTS`. It is a deployment or proxy misconfiguration rather than anything

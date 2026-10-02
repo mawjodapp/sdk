@@ -62,6 +62,18 @@ export type CheckoutErrorCode =
   | 'guest_checkout_disabled'
 
 /**
+ * The win campaign's refusals. `win_code_not_accepted` covers a code that does not exist and one
+ * already used, on purpose: keep its message vague, because telling the two apart would let anyone
+ * probe for live codes.
+ */
+export type WinCampaignErrorCode =
+  | 'win_campaign_disabled'
+  | 'win_code_not_accepted'
+  | 'win_phone_not_eligible'
+  | 'win_daily_limit_reached'
+  | 'win_pool_empty'
+
+/**
  * Documented `code` values. Left open with `(string & {})` on purpose: the server may introduce a
  * new code at any time and a client that crashes on one is worse than a client that falls through
  * to a generic message.
@@ -75,6 +87,7 @@ export type MawjodErrorCode =
   | 'not_found'
   | 'untrusted_host'
   | CheckoutErrorCode
+  | WinCampaignErrorCode
   | 'variant_not_purchasable'
   | 'pricing_conflict'
   | 'outside_service_area'

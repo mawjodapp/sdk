@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useCart } from '../src/runtime/composables/cart'
 import { useCustomerAuth } from '../src/runtime/composables/auth'
+import { useWinCampaign } from '../src/runtime/composables/campaign'
 import { useGuestCheckout } from '../src/runtime/composables/checkout'
 import { cartFixture, customerFixture } from './helpers'
 import { nuxtHarness, resetNuxt } from './nuxt-imports'
@@ -30,6 +31,14 @@ function installFakes(options: {
   const client = {
     auth: { login, loginWithCode },
     guest: { checkout: guestCheckout },
+    campaign: {
+      win: {
+        eligibility: vi.fn(async () => ({ product: { id: 'p-1', name_ar: 'زيت', name_en: 'Oil' } })),
+        claim: vi.fn(async () => {
+          throw new Error('dropped')
+        }),
+      },
+    },
     cart: { merge, addLine: vi.fn(async () => cartFixture(2)) },
   } as unknown as MawjodClient
 
@@ -135,5 +144,19 @@ describe('useGuestCheckout', () => {
 
     expect(order.value?.customer).toBeNull()
     expect(useCart().cart.value).toBeNull()
+  })
+})
+
+describe('useWinCampaign', () => {
+  it('keeps the checked product, and a failed claim leaves no prize behind', async () => {
+    installFakes({})
+    const win = useWinCampaign()
+
+    await win.checkEligibility({ phone: '+201000000001', code: 'ABC' })
+    await expect(win.claim({ phone: '+201000000001', code: 'ABC', rating: 5, comment: '' })).rejects.toThrow('dropped')
+
+    expect(win.product.value?.name_en).toBe('Oil')
+    expect(win.claimed.value).toBeNull()
+    expect(win.error.value).toBeInstanceOf(Error)
   })
 })

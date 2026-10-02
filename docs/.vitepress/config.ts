@@ -52,6 +52,7 @@ export default defineConfig({
             { text: 'returns', link: '/api/returns' },
             { text: 'fulfillment', link: '/api/fulfillment' },
             { text: 'guest', link: '/api/guest' },
+            { text: 'campaign', link: '/api/campaign' },
             { text: 'platform', link: '/api/platform' },
           ],
         },

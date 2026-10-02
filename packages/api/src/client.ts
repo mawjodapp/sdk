@@ -2,6 +2,7 @@ import { type CartTokenStorage, defaultCartTokenStorage } from './cart-token.js'
 import type { MawjodApiError } from './errors.js'
 import { type HeadersOption, Transport } from './http.js'
 import { type AuthNamespace, createAuthNamespace } from './resources/auth.js'
+import { type CampaignNamespace, createCampaignNamespace } from './resources/campaign.js'
 import { type CartNamespace, createCartNamespace } from './resources/cart.js'
 import { type CatalogNamespace, createCatalogNamespace } from './resources/catalog.js'
 import { type CheckoutNamespace, createCheckoutNamespace } from './resources/checkout.js'
@@ -69,6 +70,7 @@ export interface MawjodClient {
   returns: ReturnsNamespace
   fulfillment: FulfillmentNamespace
   guest: GuestNamespace
+  campaign: CampaignNamespace
   platform: PlatformNamespace
 }
 
@@ -106,6 +108,7 @@ export function createMawjodClient(options: MawjodClientOptions): MawjodClient {
     returns: createReturnsNamespace(transport),
     fulfillment: createFulfillmentNamespace(transport),
     guest: createGuestNamespace(transport),
+    campaign: createCampaignNamespace(transport),
     platform: createPlatformNamespace(transport),
   }
 }

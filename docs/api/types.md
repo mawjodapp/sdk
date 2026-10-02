@@ -425,6 +425,7 @@ import type {
   FulfillmentNamespace, FulfillmentQuoteInput,
   GuestNamespace, GuestCheckoutInput, GuestCheckoutResult, GuestCustomerInput, GuestAddressInput,
   GuestQuoteInput,
+  CampaignNamespace, WinCodeInput, WinClaimInput,
   PlatformNamespace,
   HeadersOption,
 } from '@mawjod/api'
