@@ -526,6 +526,12 @@ that requires verification, so do not invent a distinction the server refuses to
 `useCustomerAuth()` merges the guest cart after a successful login by default. A failing merge never
 fails the login: the session is real either way, and the reason lands on `mergeError`.
 
+When the store has `auth.otp_signin_enabled` on, the same page can offer a code instead of a
+password: `requestSignInCode(identity)`, then `loginWithCode({ identity, code })`, which merges the
+cart exactly as `login()` does. The first call answers the same whether or not the account exists,
+so the next screen says "if there is an account, a code is on its way". See
+[Authentication → sign-in by code](/guide/authentication#sign-in-by-code).
+
 Registration is the same shape, with one thing to remember:
 
 ```vue
@@ -770,6 +776,55 @@ The `customer_not_verified` branch stays in even though most stores never reach 
 where `auth.customer_verification_required` is on, which is off by default, and a store can turn it
 on after the theme ships.
 
+### A shopper who is not signed in
+
+The page above is the signed-in checkout. What a guest sees in front of it depends on two settings:
+
+```ts
+const { isAuthenticated } = useCustomerAuth()
+
+const guestCheckout = computed(
+  () =>
+    settings.value?.settings['checkout.guest_enabled']?.value === true &&
+    settings.value?.settings['auth.customer_verification_required']?.value !== true,
+)
+
+// signed in:                 the checkout above
+// guest, guestCheckout true:  "sign in" or "continue as guest"
+// guest, guestCheckout false: sign in first
+```
+
+The guest form collects an email, a phone and an optional name, and for delivery the address
+itself, with areas from `useGuestAreas()` and a quote from `useGuestFulfillment()` keyed on the
+address's position. It pays cash only.
+
+```vue
+<!-- pages/checkout/guest.vue -->
+<script setup lang="ts">
+const { latestQuote } = useCart()
+const { place, order, isStale, pending } = useGuestCheckout()
+
+async function submit() {
+  await place({
+    customer: { email: email.value, phone: phone.value, name: name.value || null },
+    fulfillment_method: 'delivery',
+    payment_method: 'cod',
+    address: address.value,
+    expected_items_subtotal_minor: latestQuote.value?.discounted_subtotal.minor ?? null,
+  })
+}
+</script>
+
+<template>
+  <!-- The order is readable only here: rendering it again needs that account signed in. -->
+  <OrderConfirmation v-if="order" :order="order" />
+</template>
+```
+
+`order.customer` is always `null`, whether or not the email already had an account, so the
+confirmation thanks the shopper without greeting them by an account name. The stale-cart and retry
+rules are the signed-in ones. See [Checkout → Guest checkout](/guide/checkout#guest-checkout).
+
 ### The address form
 
 The delivery fieldset above lists saved addresses, and the link next to it goes here. Saving an
@@ -945,7 +1000,7 @@ follow:
 
 | You might expect | Reality | What to do |
 | --- | --- | --- |
-| Guest checkout | Not in release one | Put login before the checkout form |
+| Guest checkout | A store setting, off by default | Offer "continue as guest" when `checkout.guest_enabled` is on and verification is off; otherwise put login before the checkout form. [Details](/guide/checkout#guest-checkout) |
 | Wishlist | No endpoint | Local storage, or leave it out |
 | Product reviews | No endpoint | Leave it out |
 | Related products | No endpoint | Use `filter[category]` on the catalog list |

@@ -1,7 +1,8 @@
 # `checkout`
 
-Turns a cart into an order. Requires an authenticated, verified customer. There is no guest
-checkout in release one.
+Turns a signed-in customer's cart into an order. Verification is required only on a store that turns
+on `auth.customer_verification_required`. A shopper who is not signed in checks out through
+[`guest.checkout()`](/api/guest#guest-checkout) when the store has `checkout.guest_enabled` on.
 
 Checkout never takes money. Even a card order is placed unpaid; the payment session starts
 afterwards with [`orders.pay`](/api/orders#orders-pay).
@@ -118,7 +119,8 @@ pickup_location_id
 expected_items_subtotal_minor
 ```
 
-Same key, same values → replay of the original response. Same key, any one of those changed →
+Same key, same values → replay of the original response's content (the stored body can come back
+with its keys in another order, so compare fields, not bytes). Same key, any one of those changed →
 conflict, not a replay.
 
 ### Retry semantics
@@ -149,16 +151,18 @@ would charge someone a price they never agreed to.
 | `ordering_disabled` | 422 | The owner has switched ordering off | Say the shop is not taking orders |
 | `customer_not_verified` | 403 | Identity not verified, where the store requires it | Verification screen, not the cart |
 
-409 means refetch. 422 means rewrite the request. 403 means route to verification.
+409 means refetch. 422 means rewrite the request. 403 means route to verification (or, from
+`guest.checkout()`, to sign-in).
 
 The 403 only exists on a store that has turned on `auth.customer_verification_required`, which is
-off by default. See [`store.settings()` → Verification](/api/store#verification).
+off by default. Guest checkout adds a twelfth code, `403 guest_checkout_disabled`; see
+[`guest`](/api/guest#errors). See [`store.settings()` → Verification](/api/store#verification).
 
 ```ts
 import { isCheckoutError, isStaleCartError } from '@mawjod/api'
 
 isStaleCartError(error)  // the three 409s
-isCheckoutError(error)   // all eleven
+isCheckoutError(error)   // all twelve, guest_checkout_disabled included
 ```
 
 Do not parse `error.detail`. Compute the diff from the refetched cart.

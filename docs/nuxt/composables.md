@@ -481,6 +481,8 @@ useCustomerAuth(options?: { mergeCartOnLogin?: boolean }): {
   error: Ref<unknown>
   mergeError: Ref<unknown>
   login: (input: LoginInput) => Promise<AuthSession>
+  requestSignInCode: (identity: string) => Promise<AcceptedStatus>
+  loginWithCode: (input: LoginWithCodeInput) => Promise<AuthSession>
   register: (input: RegisterInput) => Promise<Customer>
   verify: (input: VerifyInput) => Promise<Customer>
   resendVerification: (identity: string) => Promise<AcceptedStatus>
@@ -504,9 +506,22 @@ async function submit() {
 </script>
 ```
 
+### Sign-in by code
+
+`requestSignInCode()` and `loginWithCode()` wrap [`auth` → Sign-in by code](/api/auth#sign-in-by-code),
+available while the store has `auth.otp_signin_enabled` on. `loginWithCode()` behaves exactly like
+`login()`: it sets `customer` and runs the same cart merge under the same `mergeCartOnLogin` rule.
+
+```ts
+const { requestSignInCode, loginWithCode } = useCustomerAuth()
+
+await requestSignInCode(identity.value) // 202 whether or not the account exists
+await loginWithCode({ identity: identity.value, code: code.value })
+```
+
 ### `mergeCartOnLogin`
 
-On by default. After a successful login, the guest cart is handed to the account that just signed
+On by default. After a successful login, by password or by code, the guest cart is handed to the account that just signed
 in, because a shopper who filled a cart and then logged in expects to keep it.
 
 The merge is skipped when no guest cart token is stored, and a failing merge never fails the
@@ -628,6 +643,20 @@ pick the name for the locale you are rendering in.
 The key comes from the query's initial shape, so a governorate list and a city list on one form do
 not share a cache entry. See [`customer.areas.list`](/api/customer#customer-areas-list).
 
+## `useGuestAreas()`
+
+```ts
+useGuestAreas(
+  query?: MaybeRefOrGetter<AreasQuery | undefined>,
+  options?: MawjodAsyncOptions,
+)
+```
+
+`GET /guest/areas`, keyed `mawjod:guest-areas:<key>`. The same query, rows and picker pattern as
+`useAreas()`, for a guest delivery address. It answers `403 guest_checkout_disabled` while the store
+has guest checkout off, so mount it only on the guest checkout form. See
+[`guest.areas.list`](/api/guest#guest-areas-list).
+
 ## `useCheckout()`
 
 ```ts
@@ -723,6 +752,47 @@ land in `error`: refetching clears none of them. See
 the shopper leaves the checkout page.
 
 See [Checkout](/guide/checkout).
+
+## `useGuestCheckout()`
+
+```ts
+useGuestCheckout(): {
+  attempt: Ref<CheckoutAttempt | null>
+  result: Ref<GuestCheckoutResult | null>
+  order: ComputedRef<GuestOrder | null>
+  staleCart: Ref<(MawjodApiError & { code: StaleCartErrorCode }) | null>
+  isStale: ComputedRef<boolean>
+  pending: Ref<boolean>
+  error: Ref<unknown>
+  place: (input: GuestCheckoutInput, options?: { idempotencyKey?: string }) => Promise<GuestCheckoutResult>
+  retry: (input?: GuestCheckoutInput) => Promise<GuestCheckoutResult>
+  reset: () => void
+}
+```
+
+`POST /guest/checkout`, for a shopper who is not signed in, while the store has
+`checkout.guest_enabled` on. Same attempt pair, same `place()` versus `retry()` table and same
+`staleCart` as `useCheckout()`, with its own state, so a guest attempt and a signed-in attempt never
+share a key.
+
+```ts
+const { place, order } = useGuestCheckout()
+
+await place({
+  customer: { email: email.value, phone: phone.value },
+  fulfillment_method: 'pickup',
+  payment_method: 'cod',
+  pickup_location_id: pickupLocationId.value,
+})
+
+order.value?.customer // null, always
+order.value?.address  // null for pickup; the inline address for delivery
+```
+
+On success it empties the shared cart and quote, because the server released the guest token with
+the cart it bought, and the client has already cleared the stored token. Nobody is signed in
+afterwards. Render the confirmation from `order`: reading it again needs that account signed in.
+See [`guest.checkout`](/api/guest#guest-checkout).
 
 ## `useOrders()`
 
@@ -854,6 +924,20 @@ Pass `{ immediate: false }` when a page only needs `quote()`:
 const { quote } = useFulfillment({ immediate: false })
 ```
 :::
+
+## `useGuestFulfillment()`
+
+```ts
+useGuestFulfillment(options?: MawjodAsyncOptions): {
+  // the same fields as useFulfillment()
+  quote: (input: GuestQuoteInput) => Promise<FulfillmentQuote>
+}
+```
+
+`/guest/fulfillment`, keyed `mawjod:guest-fulfillment:pickup-locations`. The same pickup list and
+quote as `useFulfillment()` for a guest, except that a delivery quote takes a `position` rather than
+a saved `address_id`. `lastQuote.eta` is an estimate or `null`, as on the signed-in side. See
+[`guest.fulfillment`](/api/guest#guest-fulfillment-quotes).
 
 ## The pending / error pattern
 

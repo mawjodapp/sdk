@@ -1,7 +1,8 @@
 # `customer`
 
 The signed-in customer's profile, saved addresses, and the administrative areas an address can
-point at. Every call requires an authenticated customer.
+point at. Every call requires a signed-in customer. A guest checkout reads the same areas from
+[`guest.areas.list()`](/api/guest#guest-areas-list).
 
 ```ts
 mawjod.customer.profile.get()
@@ -137,6 +138,7 @@ interface AreasQuery {
   filter?: {
     level?: 'governorate' | 'city' | 'district'
     parent?: string
+    active?: boolean
   }
 }
 ```
@@ -147,6 +149,7 @@ interface AreasQuery {
 | `sort` | `sort` | `code`, `created_at` or `updated_at`, with a leading `-` for descending. |
 | `filter.level` | `filter[level]` | One level. Never a set. |
 | `filter.parent` | `filter[parent]` | A single area UUIDv7. Anything else is a `422`. |
+| `filter.active` | `filter[active]` | Switched-off areas are left out unless this is `false`. |
 
 `filter[level]` takes one value. `filter[level]=city,district` is refused with a `422`, unlike
 `filter[status]` on orders, which does accept a comma-joined set. The SDK types `level` as a single

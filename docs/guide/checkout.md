@@ -3,8 +3,19 @@
 Checkout turns a cart into an order. It never takes money: even a card order is placed unpaid and
 the payment session starts afterwards.
 
-Checkout requires an authenticated, verified customer. There is no guest checkout in release one.
-A guest can hold a cart; they cannot place an order.
+There are two ways in. A signed-in customer checks out through `checkout.place()`. A shopper who is
+not signed in checks out through `guest.checkout()`, when the store has `checkout.guest_enabled` on
+and `auth.customer_verification_required` off. With guest checkout off, a guest can hold a cart and
+signs in to place the order. Verification gates checkout only on a store that turns it on.
+
+```ts
+const { settings } = await mawjod.store.settings()
+const guestCheckout =
+  settings['checkout.guest_enabled']?.value === true &&
+  settings['auth.customer_verification_required']?.value !== true
+```
+
+The signed-in flow comes first below; [Guest checkout](#guest-checkout) follows it.
 
 ## The flow
 
@@ -53,9 +64,10 @@ an address yet, pass `position: { longitude, latitude }`.
 A destination outside every active delivery zone is `422 outside_service_area`. Show it on the
 address step, not on the payment step.
 
-A quote accepts a bare position, but `place()` with `fulfillment_method: 'delivery'` accepts only a
-saved `address_id`. Saving an address needs an `area_id`, and `customer.areas.list()` is where one
-comes from: list the governorates, then the cities inside the one the shopper picked, and send the
+A quote accepts a bare position, but signed-in `place()` with `fulfillment_method: 'delivery'`
+accepts only a saved `address_id`. (A guest checkout sends the address inline instead; see
+[Guest checkout](#guest-checkout).) Saving an address needs an `area_id`, and
+`customer.areas.list()` is where one comes from: list the governorates, then the cities inside the one the shopper picked, and send the
 id of the deepest area they chose. See [`customer.areas.list`](/api/customer#customer-areas-list).
 
 ### 3. Choose a payment method
@@ -160,8 +172,9 @@ pickup_location_id
 expected_items_subtotal_minor
 ```
 
-Send the same key with the same values and you get a replay: the original response, no second
-order. Send the same key with any one of those values changed and you get a conflict, not a
+Send the same key with the same values and you get a replay: the original response's content, no
+second order. Compare fields rather than bytes, because the stored body can come back with its keys
+in another order. Send the same key with any one of those values changed and you get a conflict, not a
 replay. That is the whole rule, and it decides how you retry.
 
 ## Retrying, correctly
@@ -251,9 +264,10 @@ Every checkout failure has a `code`. Branch on it and nothing else.
 | `outside_ordering_hours` | 422 | Ordering is on, but the shop is closed at this hour. | Ask them to come back later; keep the cart. |
 | `ordering_disabled` | 422 | The owner has switched ordering off. | Say the shop is not taking orders right now. |
 | `customer_not_verified` | 403 | Signed in, identity not verified, on a store that requires verification. | Verification screen, not the cart. |
+| `guest_checkout_disabled` | 403 | Guest checkout only: the store takes orders from signed-in customers. | Sign-in screen, keep the cart. |
 
 Read as a rule: 409 means refetch, 422 means rewrite the request, 403 means send them to
-verification. The four ordering-rule 422s bend that rule, since no rewrite of the request clears
+verification or sign-in. The four ordering-rule 422s bend that rule, since no rewrite of the request clears
 them. Below or above a bound, the shopper changes the cart; outside hours, they come back later;
 switched off, they wait for the owner.
 
@@ -276,7 +290,7 @@ Two guards cover the whole family:
 import { isCheckoutError, isStaleCartError } from '@mawjod/api'
 
 isStaleCartError(error) // the three 409s
-isCheckoutError(error)  // all eleven
+isCheckoutError(error)  // all twelve, guest_checkout_disabled included
 ```
 
 `error.detail` never contains quantities, prices or addresses. It is prose written for a person and
@@ -296,6 +310,72 @@ await mawjod.checkout.place({
 ```
 
 The order is placed from the merged cart.
+
+## Guest checkout
+
+When `guestCheckout` from the top of this page is true, a shopper who is not signed in can place a
+cash order without an account step. Offer it beside "sign in", not instead of it.
+
+```
+guest.areas.list()                 the address picker, for delivery
+guest.fulfillment.pickupLocations()   the pickup points, for pickup
+cart.quote()                       price the cart
+guest.fulfillment.quotes()         fee and ETA, from a position rather than a saved address
+guest.checkout()                   places the order; nobody is signed in afterwards
+```
+
+What differs from the signed-in flow:
+
+| | Signed in | Guest |
+| --- | --- | --- |
+| Who | the session | `customer: { email, phone, name? }` in the body |
+| Delivery address | a saved `address_id` | the address fields inline, saved to the account |
+| Areas, pickup points, quotes | `customer.*`, `fulfillment.*` | `guest.*` |
+| Payment | anything the quote allows | `cod` only |
+| `order.customer` | the customer | always `null` |
+| Reading the order later | `orders.get()` | only after that account signs in |
+
+```ts
+const quote = await mawjod.cart.quote()
+
+const shipping = await mawjod.guest.fulfillment.quotes({
+  method: 'delivery',
+  subtotal_minor: quote.discounted_subtotal.minor,
+  position: { longitude: 31.2001, latitude: 30.0444 },
+})
+
+const { order } = await mawjod.guest.checkout({
+  customer: { email: 'nour@example.test', phone: '+201000000001', name: 'Nour Hassan' },
+  fulfillment_method: 'delivery',
+  payment_method: 'cod',
+  address: {
+    area_id: cityId,
+    label: 'Home',
+    recipient_name: 'Nour Hassan',
+    recipient_phone: '+201000000001',
+    line_one: '12 Gameat Al Dowal Al Arabeya',
+    position: { longitude: 31.2001, latitude: 30.0444 },
+  },
+  expected_items_subtotal_minor: quote.discounted_subtotal.minor,
+})
+```
+
+For pickup, send `fulfillment_method: 'pickup'` and a `pickup_location_id` and leave `address` out;
+the order comes back with `address: null`. A zone that promises no time gives `fulfillment.eta:
+null`, the same as on the signed-in side. All three shapes are on
+[`guest` → GuestCheckoutResult](/api/guest#guestcheckoutresult).
+
+The order goes to the account with that email (phone, on a store in phone identity mode), and one is
+created when there is none. The response is the same either way and `order.customer` is always
+`null`, so a theme cannot tell a returning shopper from a new one and should not try. Render the
+confirmation from the result: the order cannot be read again until that account signs in. An account
+the checkout created has no password, so point the shopper at [sign-in by
+code](/guide/authentication#sign-in-by-code) or password recovery for their order history.
+
+The idempotency pair, the stale-cart rules and the failure families are the ones above. The client
+reads the guest cart token from storage and clears it once the order is placed, because the server
+releases it with the cart. `403 guest_checkout_disabled` means the setting changed under the theme;
+send the shopper to sign in.
 
 ## A complete example
 
@@ -367,3 +447,7 @@ async function submit() {
 `retry()` replays the stored input under the stored pair. That is the transport-failure path only.
 After a stale-cart failure, call `place()` again: it mints a new pair. See
 [Composables → useCheckout](/nuxt/composables#usecheckout).
+
+The guest flow has the same shape in `useGuestCheckout()`, with `useGuestFulfillment()` and
+`useGuestAreas()` for the address step. It empties the shared cart state once the order is placed.
+See [Composables → useGuestCheckout](/nuxt/composables#useguestcheckout).

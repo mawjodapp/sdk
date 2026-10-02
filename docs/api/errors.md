@@ -112,7 +112,7 @@ On a list or a results page, one bad row throws for the whole page.
 | `isUnauthenticated(e)` | `MawjodApiError` | `code === 'unauthenticated'` |
 | `isForbidden(e)` | `MawjodApiError` | `code === 'forbidden'` |
 | `isStoreUnavailable(e)` | `MawjodApiError` | `code === 'store_unavailable'` |
-| `isCheckoutError(e)` | `MawjodApiError & { code: CheckoutErrorCode }` | the eleven checkout codes |
+| `isCheckoutError(e)` | `MawjodApiError & { code: CheckoutErrorCode }` | the twelve checkout codes |
 | `isStaleCartError(e)` | `MawjodApiError & { code: StaleCartErrorCode }` | the three stale-cart codes |
 
 ## `ProblemDocument`
@@ -158,6 +158,7 @@ type CheckoutErrorCode =
   | 'cart_not_found'
   | 'payment_method_unavailable'
   | 'customer_not_verified'
+  | 'guest_checkout_disabled'
 
 type MawjodErrorCode =
   | 'unauthenticated'
@@ -173,6 +174,7 @@ type MawjodErrorCode =
   | 'outside_service_area'
   | 'identity_unavailable'
   | 'invalid_identity_challenge'
+  | 'otp_signin_disabled'
   | 'cancellation_window_closed'
   | 'payment_already_resolved'
   | 'payment_provider_unavailable'
@@ -194,6 +196,11 @@ hour, or an items subtotal outside the minimum and maximum. See
 `customer_not_verified` is conditional. It arrives only from a store that has turned on
 `auth.customer_verification_required`, which is off by default. See
 [`store.settings()` → Verification](/api/store#verification).
+
+`guest_checkout_disabled` (403) answers every `/guest/*` call while `checkout.guest_enabled` is off,
+or while verification is required. `otp_signin_disabled` (403) answers both sign-in-by-code calls
+while `auth.otp_signin_enabled` is off. Both are settings a theme reads up front, so neither should
+reach a shopper. See [`store.settings()` → Guest checkout and sign-in by code](/api/store#guest-checkout-and-sign-in-by-code).
 
 `untrusted_host` is a `400` refused before the endpoint ran: the request's `Host` header is not in
 the deployment's `TRUSTED_HOSTS`. It is a deployment or proxy misconfiguration rather than anything

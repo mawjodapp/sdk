@@ -3,11 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useCart } from '../src/runtime/composables/cart'
 import { useCustomerAuth } from '../src/runtime/composables/auth'
+import { useGuestCheckout } from '../src/runtime/composables/checkout'
 import { cartFixture, customerFixture } from './helpers'
 import { nuxtHarness, resetNuxt } from './nuxt-imports'
 
 interface AuthFakes {
   login: ReturnType<typeof vi.fn>
+  loginWithCode: ReturnType<typeof vi.fn>
   merge: ReturnType<typeof vi.fn>
   storage: CartTokenStorage
 }
@@ -20,11 +22,14 @@ function installFakes(options: {
   merge?: () => Promise<Cart>
 }): AuthFakes {
   const login = vi.fn(async () => session)
+  const loginWithCode = vi.fn(async () => session)
+  const guestCheckout = vi.fn(async () => ({ order: { customer: null }, idempotencyKey: 'k', operationId: 'o' }))
   const merge = vi.fn(options.merge ?? (async () => cartFixture(3, 'merged-cart')))
   const storage: CartTokenStorage = { get: () => options.token ?? null, set: vi.fn() }
 
   const client = {
-    auth: { login },
+    auth: { login, loginWithCode },
+    guest: { checkout: guestCheckout },
     cart: { merge, addLine: vi.fn(async () => cartFixture(2)) },
   } as unknown as MawjodClient
 
@@ -33,7 +38,7 @@ function installFakes(options: {
   harness.nuxtApp['$mawjod'] = client
   harness.nuxtApp['$mawjodCartTokenStorage'] = storage
 
-  return { login, merge, storage }
+  return { login, loginWithCode, merge, storage }
 }
 
 beforeEach(() => {
@@ -64,11 +69,16 @@ describe('useCart', () => {
 })
 
 describe('useCustomerAuth login', () => {
-  it('merges the guest cart when a token is stored and refreshes cart state', async () => {
+  it.each(['login', 'loginWithCode'] as const)('%s merges the guest cart when a token is stored', async (method) => {
     const fakes = installFakes({ token: 'a'.repeat(64) })
 
     const auth = useCustomerAuth()
-    const result = await auth.login({ identity: 'layla@example.com', password: 'secret' })
+    const result =
+      method === 'login'
+        ? await auth.login({ identity: 'layla@example.com', password: 'secret' })
+        : await auth.loginWithCode({ identity: 'layla@example.com', code: '123456' })
+
+    expect(fakes[method]).toHaveBeenCalledTimes(1)
 
     expect(result).toBe(session)
     expect(auth.customer.value).toBe(customerFixture)
@@ -111,5 +121,19 @@ describe('useCustomerAuth login', () => {
     // The failure is reported, but it is not the login's failure.
     expect(auth.mergeError.value).toBe(failure)
     expect(auth.error.value).toBeNull()
+  })
+})
+
+describe('useGuestCheckout', () => {
+  it('empties the shared cart once the guest order is placed', async () => {
+    installFakes({})
+    await useCart().addLine({ variant_id: 'var-1', quantity: 2 })
+
+    const { place, order } = useGuestCheckout()
+
+    await place({ customer: { email: 'nour@example.test', phone: '+201000000001' }, fulfillment_method: 'pickup', payment_method: 'cod', pickup_location_id: 'loc-1' })
+
+    expect(order.value?.customer).toBeNull()
+    expect(useCart().cart.value).toBeNull()
   })
 })

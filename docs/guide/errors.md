@@ -93,7 +93,7 @@ import {
 | `isUnauthenticated` | `unauthenticated` (401) |
 | `isForbidden` | `forbidden` (403) |
 | `isStoreUnavailable` | `store_unavailable` (503) |
-| `isCheckoutError` | the eleven checkout codes |
+| `isCheckoutError` | the twelve checkout codes |
 | `isStaleCartError` | the three stale-cart codes |
 
 They narrow, so TypeScript knows what you have:

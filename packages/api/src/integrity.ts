@@ -1,5 +1,5 @@
 import { PayloadIntegrityError } from './errors.js'
-import type { ApiMeta, Order, Return, SearchProductHit } from './types.js'
+import type { ApiMeta, GuestOrder, Order, Return, SearchProductHit } from './types.js'
 
 /**
  * An order or a return always has at least one line, because the server creates neither without
@@ -9,7 +9,7 @@ import type { ApiMeta, Order, Return, SearchProductHit } from './types.js'
  * Rendering that shows a buyer an order that appears to contain nothing. Failing loudly, carrying
  * the request id, is the only honest option.
  */
-export function guardOrder(order: Order, meta: ApiMeta | null): Order {
+export function guardOrder<T extends Order | GuestOrder>(order: T, meta: ApiMeta | null): T {
   return guard(order, 'order', meta)
 }
 
@@ -58,7 +58,7 @@ export function guardSearchHits(
   return hits
 }
 
-function guard<T extends Order | Return>(resource: T, kind: 'order' | 'return', meta: ApiMeta | null): T {
+function guard<T extends Order | GuestOrder | Return>(resource: T, kind: 'order' | 'return', meta: ApiMeta | null): T {
   const lines: unknown = resource?.lines
 
   if (!Array.isArray(lines) || lines.length === 0) {

@@ -1,6 +1,6 @@
 # `auth`
 
-Customer registration, verification, sign-in and password recovery. Identity is a Laravel Sanctum
+Customer registration, verification, sign-in by password or by code, and password recovery. Identity is a Laravel Sanctum
 session cookie, and there are no bearer tokens in this API.
 
 See [Authentication](/guide/authentication) for the session and CSRF model, and for the two
@@ -11,6 +11,8 @@ mawjod.auth.register(input)
 mawjod.auth.verify(input)
 mawjod.auth.resendVerification(identity)
 mawjod.auth.login(input)
+mawjod.auth.requestSignInCode(identity)
+mawjod.auth.loginWithCode(input)
 mawjod.auth.forgotPassword(identity)
 mawjod.auth.resetPassword(input)
 mawjod.auth.logout()
@@ -43,7 +45,8 @@ Whether that challenge gates anything is the store's decision, through
 [`store.settings()` → Verification](/api/store#verification).
 
 ::: warning No session is created
-`register()` does not sign anyone in, and neither does `verify()`. Only `login()` does. Route a
+`register()` does not sign anyone in, and neither does `verify()`. Only `login()` and
+`loginWithCode()` do. Route a
 freshly registered shopper to the login page, or to a verification screen when the store requires
 verification, but not to an account page.
 :::
@@ -110,6 +113,63 @@ shopper which one it was.
 
 After a successful login, merge any guest cart. See [`cart.merge`](/api/cart#cart-merge).
 
+## Sign-in by code
+
+A store can let customers sign in with a six-digit code sent to their email or phone, instead of a
+password. The switch is the public setting `auth.otp_signin_enabled`, off by default. Read it before
+you show a "send me a code" button:
+
+```ts
+const { settings } = await mawjod.store.settings()
+const offersCode = settings['auth.otp_signin_enabled']?.value === true
+```
+
+While it is off, both calls below answer `403 otp_signin_disabled` whatever the body.
+
+An account that a guest checkout created has no password. It signs in by code, or sets a password
+through [`forgotPassword`](#auth-forgotpassword).
+
+### `auth.requestSignInCode()`
+
+```ts
+requestSignInCode(identity: string): Promise<AcceptedStatus>
+```
+
+`POST /api/v1/customer/auth/otp/request`. Answers `202 { status: 'accepted' }`, after the same wait,
+whether or not the account exists. Show the same "check your inbox" screen either way, and never
+say "no account with that email".
+
+When the account exists, a code valid once for ten minutes goes to the identity, and any earlier
+code stops working.
+
+### `auth.loginWithCode()`
+
+```ts
+loginWithCode(input: LoginWithCodeInput): Promise<AuthSession>
+```
+
+`POST /api/v1/customer/auth/otp/verify`.
+
+```ts
+interface LoginWithCodeInput {
+  identity: string   // up to 254 characters
+  code: string       // exactly six digits
+}
+```
+
+The result is the same session and the same `AuthSession` a password login gives, so merge the
+guest cart afterwards exactly as you would after `login()`. A wrong, spent, expired or never-sent
+code and a missing account all answer `422 invalid_identity_challenge`. Five wrong tries burn the
+code; ask for a new one.
+
+```ts
+session.customer // { id: '01916f7a-…', name: 'Mona Ali', identity: { type: 'email', value: 'mona@example.test', verified_at: '2026-08-14T17:00:00+00:00' } }
+session.customer // { id: '01916f7a-…', name: '', identity: { type: 'email', value: 'nour@example.test', verified_at: null } }
+```
+
+The second is an account a guest checkout created without a name. Fall back to the identity when
+`name` is empty.
+
 ## `auth.forgotPassword()`
 
 ```ts
@@ -169,7 +229,8 @@ interface Customer {
 | Code | Status | Where |
 | --- | --- | --- |
 | `identity_unavailable` | 422 | `register` |
-| `invalid_identity_challenge` | 422 | `verify`, `resetPassword` |
+| `invalid_identity_challenge` | 422 | `verify`, `resetPassword`, `loginWithCode` |
+| `otp_signin_disabled` | 403 | `requestSignInCode`, `loginWithCode`, while `auth.otp_signin_enabled` is off |
 | `unauthenticated` | 401 | `login` (bad credentials), `logout` |
 | `validation_failed` | 422 | everywhere |
 | `rate_limited` | 429 | everywhere |
@@ -178,9 +239,11 @@ interface Customer {
 ## In Nuxt
 
 ```ts
-const { customer, isAuthenticated, login, register, verify, logout, mergeError } = useCustomerAuth()
+const { customer, isAuthenticated, login, requestSignInCode, loginWithCode, logout, mergeError } =
+  useCustomerAuth()
 ```
 
-`useCustomerAuth()` keeps a shared `customer` ref and merges the guest cart after login by default.
+`useCustomerAuth()` keeps a shared `customer` ref and merges the guest cart after login by default,
+by password or by code.
 It deliberately does not populate `customer` on `register()` or `verify()`, because neither creates
 a session. See [Composables → useCustomerAuth](/nuxt/composables#usecustomerauth).

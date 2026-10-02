@@ -128,6 +128,11 @@ export interface StoreSettingEntry {
  * `auth.customer_verification_required` is the switch a theme reads before it surfaces any
  * verification UX. It is off by default, and while it is off an unverified customer signs in,
  * orders and resets a password like anyone else.
+ *
+ * `checkout.guest_enabled` (boolean, off by default) opens `/guest/*`, so a shopper who is not
+ * signed in can place a cash order. It only takes effect while
+ * `auth.customer_verification_required` is off. `auth.otp_signin_enabled` (boolean, off by default)
+ * offers sign-in by a six-digit code beside the password.
  */
 export interface StoreSettings {
   settings: Record<string, StoreSettingEntry>
@@ -550,7 +555,7 @@ export interface GeoPosition {
 export type AdministrativeAreaLevel = 'governorate' | 'city' | 'district'
 
 /**
- * A row from `GET /customer/areas`.
+ * A row from `GET /customer/areas` or `GET /guest/areas`.
  *
  * Both names are always present. Unlike the catalog, this list is not resolved to one locale, so
  * the caller picks the name for the locale it is rendering in.
@@ -769,6 +774,12 @@ export interface Order {
   fulfillment: OrderFulfillment | null
   history: OrderHistoryEntry[]
 }
+
+/**
+ * What `POST /guest/checkout` returns: an order with `customer` always `null`, so the response
+ * never says whether the email already had an account.
+ */
+export type GuestOrder = Omit<Order, 'customer'> & { customer: null }
 
 /**
  * A short-lived, single-use provider redirect. Never persisted server-side, so it cannot be

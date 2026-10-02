@@ -9,8 +9,8 @@ release. If you are looking for a place to store an access token, there isn't on
 Three things carry identity, and the client manages all three:
 
 1. A session cookie, named by the deployment's `SESSION_COOKIE` (`mawjod-session` by default). It
-   is set by `GET /sanctum/csrf-cookie` and starts carrying customer identity once
-   `POST /customer/auth/login` succeeds.
+   is set by `GET /sanctum/csrf-cookie` and starts carrying customer identity once a sign-in
+   succeeds, by password or by code.
 2. An `XSRF-TOKEN` cookie, set by the same call. It is stored URL-encoded.
 3. An `X-XSRF-TOKEN` request header, which must be the *decoded* value of that cookie. Sanctum
    answers `419` if it is missing or stale.
@@ -53,7 +53,8 @@ Whether anything depends on that challenge is the store's decision; see
 [Verification](#verification).
 
 ::: warning
-`register()` does not create a session. Neither does `verify()`. Only `login()` does. A theme that
+`register()` does not create a session. Neither does `verify()`. Only `login()` and
+`loginWithCode()` do. A theme that
 routes a freshly registered shopper straight to a page that reads `customer.profile` will get a
 `401`.
 :::
@@ -122,6 +123,44 @@ cannot, and the server is deliberately not helping.
 If the shopper filled a guest cart before logging in, merge it now. See
 [Cart → merge on login](/guide/cart#merge-on-login).
 
+## Sign-in by code
+
+A store can offer sign-in by a six-digit code sent to the shopper's email or phone. The switch is
+`auth.otp_signin_enabled`, off by default. Show the "email me a code" path only when it is on:
+
+```ts
+const offersCode = settings['auth.otp_signin_enabled']?.value === true
+```
+
+It is two calls:
+
+```ts
+await mawjod.auth.requestSignInCode('nour@example.com')
+// { status: 'accepted' }, whether or not the account exists
+
+const session = await mawjod.auth.loginWithCode({ identity: 'nour@example.com', code: '123456' })
+```
+
+The request answers `202` after the same wait whoever asks, so the next screen says "if there is an
+account for that address, a code is on its way" and nothing more. Never tell the shopper the account
+does not exist. A code is good once, for ten minutes, and asking again retires the previous one.
+
+`loginWithCode` gives the same session and the same `AuthSession` as a password login, so merge the
+guest cart afterwards in the same way. A wrong, spent or expired code and an unknown account all
+answer `422 invalid_identity_challenge`, and five wrong tries burn the code. Offer "send a new
+code" on that error.
+
+This is also how an account created by guest checkout signs in, since it has no password until the
+shopper sets one through password recovery. Such an account's `name` is `''` when the checkout gave
+none:
+
+```ts
+session.customer.name // 'Nour Adel'
+session.customer.name // '': show the identity instead
+```
+
+With the setting off, both calls answer `403 otp_signin_disabled`.
+
 ## Forgotten passwords
 
 ```ts
@@ -173,7 +212,9 @@ server yet. Call `useCustomerProfile()` if you need to know on first render.
 ## Verification and checkout
 
 On a default store nothing happens here: an unverified customer browses, holds a cart and places an
-order.
+order. With `checkout.guest_enabled` on, a shopper who never signed in places one too, through
+[guest checkout](/guide/checkout#guest-checkout). Turning verification on closes guest checkout,
+because a guest is never verified.
 
 On a store with `auth.customer_verification_required` on, checkout refuses with
 `403 customer_not_verified`. Route that to a verification screen, not back to the cart. The cart is

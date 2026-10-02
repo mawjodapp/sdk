@@ -153,6 +153,10 @@ timestamps. See [`customer.areas.list`](/api/customer#customer-areas-list).
 [`Return`](/api/returns#return). It is three fields, not the profile: the full account is
 `Customer`, which [`customer.profile.get()`](/api/customer#customer-profile-get) returns.
 
+A guest checkout returns a `GuestOrder`, which is `Omit<Order, 'customer'> & { customer: null }`:
+the response never says whether the email already had an account. See
+[`guest.checkout`](/api/guest#guestcheckoutresult).
+
 ## Open unions
 
 Three types are deliberately open, written as `'known' | 'values' | (string & {})`. Known values
@@ -412,13 +416,15 @@ import type {
   SearchNamespace, SearchProductsQuery,
   ContentNamespace,
   CartNamespace, AddCartLineInput,
-  AuthNamespace, LoginInput, RegisterInput, ResetPasswordInput, VerifyInput,
+  AuthNamespace, LoginInput, LoginWithCodeInput, RegisterInput, ResetPasswordInput, VerifyInput,
   CustomerNamespace, AddressInput, UpdateProfileInput, AreasQuery,
   CheckoutNamespace, CheckoutInput, CheckoutOptions, CheckoutResult,
   OrdersNamespace, OrdersQuery, OrderStatus, CancelOrderInput, PayOrderInput,
   ReturnsNamespace, ReturnsQuery, ReturnStatus, CreateReturnInput, CreateReturnLineInput,
   CancelReturnInput, AddEvidenceInput,
   FulfillmentNamespace, FulfillmentQuoteInput,
+  GuestNamespace, GuestCheckoutInput, GuestCheckoutResult, GuestCustomerInput, GuestAddressInput,
+  GuestQuoteInput,
   PlatformNamespace,
   HeadersOption,
 } from '@mawjod/api'

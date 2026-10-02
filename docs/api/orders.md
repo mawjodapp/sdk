@@ -243,6 +243,10 @@ the result of `cancel`, and the order that [`checkout`](/api/checkout) hands bac
 resource serves both the staff and the customer views, which is why a shopper's own order still
 names them. The same shape is embedded in a [`Return`](/api/returns#return).
 
+The one exception is the order [`guest.checkout()`](/api/guest#guestcheckoutresult) returns, whose
+`customer` is always `null`; the SDK types it as `GuestOrder`. Once that account signs in, the same
+order read through `orders.get()` names its customer like any other.
+
 Order lines carry both locales, like cart lines.
 
 ## Errors

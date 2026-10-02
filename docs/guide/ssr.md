@@ -97,10 +97,12 @@ There are none. The storefront surface authenticates with a session cookie only,
 scheme is explicitly not part of this release. A native app has to behave like a browser: keep a
 cookie jar, call `/sanctum/csrf-cookie`, and echo `X-XSRF-TOKEN`.
 
-### Guest checkout
+### Guest checkout during SSR
 
-Also none. Placing an order requires a signed-in, verified customer, on the server as much as in the
-browser.
+Guest checkout exists when the store has `checkout.guest_enabled` on, but it belongs in the browser.
+It buys the cart behind the guest token, and that token lives in browser storage. A server-side
+client holds one only if you seeded it as above, and otherwise `guest.checkout()` during a render
+throws for want of one. Seeded or not, it is a button press like signed-in checkout, not page data.
 
 ## What is safe to render on the server
 
@@ -113,7 +115,9 @@ browser.
 | `cart.addLine` and other cart writes | signed-in only | guest writes strand the token |
 | `auth.*` | no | logging in during SSR sets a cookie on the wrong response |
 | `customer.*`, `orders.*`, `returns.*`, `fulfillment.*` | yes | with a forwarded cookie |
+| `guest.areas.list`, `guest.fulfillment.*` | yes | public; `403 guest_checkout_disabled` while guest checkout is off |
 | `checkout.place`, `orders.pay` | avoid | a user action, not page data; also see below |
+| `guest.checkout` | no | the guest token is in the browser |
 | `platform.*` | yes | infrastructure metadata |
 
 Checkout during SSR is not blocked, but it is a poor fit: it is a button press, its retry semantics

@@ -123,9 +123,11 @@ cookie you forwarded, not by a guest token.
 There are none in this API. A native app has to behave like a browser: cookie jar,
 `/sanctum/csrf-cookie`, `X-XSRF-TOKEN`.
 
-### Guest checkout
+### Guest checkout during SSR
 
-Placing an order requires a signed-in, verified customer, during SSR as much as in the browser.
+`useGuestCheckout()` reads the guest cart token from storage, and on the server that storage is an
+empty per-request memory store. Place a guest order from the browser. `useGuestAreas()` and
+`useGuestFulfillment()` are public reads and render on the server like any other.
 
 ### Auth calls during SSR
 
@@ -145,7 +147,9 @@ your server sends to the browser. The browser never sees them. Sign in from the 
 | `useCustomerAuth` | no; call from the browser |
 | `useCustomerProfile`, `useAddresses` | yes, with a forwarded cookie |
 | `useOrders`, `useReturns`, `useFulfillment` | yes, with a forwarded cookie |
+| `useGuestAreas`, `useGuestFulfillment` | yes; public, `403 guest_checkout_disabled` while off |
 | `useCheckout` | browser only in practice |
+| `useGuestCheckout` | browser only; the guest token is there |
 
 Checkout during SSR is not blocked, but it is a poor fit: it is a button press whose retry semantics
 depend on holding an idempotency pair across attempts, and a render a framework may retry is the

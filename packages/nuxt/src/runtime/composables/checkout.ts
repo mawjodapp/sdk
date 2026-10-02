@@ -1,6 +1,9 @@
 import {
   type CheckoutInput,
   type CheckoutResult,
+  type GuestCheckoutInput,
+  type GuestCheckoutResult,
+  type GuestOrder,
   isStaleCartError,
   type MawjodApiError,
   type Order,
@@ -11,13 +14,14 @@ import { computed, type ComputedRef, type Ref } from 'vue'
 
 import { runTask, useMawjodRef, useMawjodTask } from '../internal'
 import type { CheckoutAttempt } from '../types'
+import { useCart } from './cart'
 import { useMawjodApi } from './client'
 
-export interface UseCheckoutReturn {
+interface CheckoutFlowReturn<TInput, TResult extends { order: unknown }> {
   /** The `Idempotency-Key` / `operation_id` pair of the current attempt. Reused by `retry()`. */
   attempt: Ref<CheckoutAttempt | null>
-  result: Ref<CheckoutResult | null>
-  order: ComputedRef<Order | null>
+  result: Ref<TResult | null>
+  order: ComputedRef<TResult['order'] | null>
   /**
    * Set when the attempt failed with `cart_price_changed`, `cart_not_purchasable` or
    * `insufficient_stock`: the world moved under the buyer. Refetch the cart, show what changed and
@@ -27,11 +31,14 @@ export interface UseCheckoutReturn {
   isStale: ComputedRef<boolean>
   pending: Ref<boolean>
   error: Ref<unknown>
-  place: (input: CheckoutInput, options?: { idempotencyKey?: string }) => Promise<CheckoutResult>
+  place: (input: TInput, options?: { idempotencyKey?: string }) => Promise<TResult>
   /** Replays the last attempt with the same key pair. The server replays; it does not re-charge. */
-  retry: (input?: CheckoutInput) => Promise<CheckoutResult>
+  retry: (input?: TInput) => Promise<TResult>
   reset: () => void
 }
+
+export type UseCheckoutReturn = CheckoutFlowReturn<CheckoutInput, CheckoutResult>
+export type UseGuestCheckoutReturn = CheckoutFlowReturn<GuestCheckoutInput, GuestCheckoutResult>
 
 /**
  * `POST /customer/checkout`.
@@ -44,26 +51,59 @@ export interface UseCheckoutReturn {
  */
 export function useCheckout(): UseCheckoutReturn {
   const api = useMawjodApi()
-  const task = useMawjodTask('mawjod:checkout')
-  const attempt = useMawjodRef<CheckoutAttempt | null>('mawjod:checkout:attempt', () => null)
-  const result = useMawjodRef<CheckoutResult | null>('mawjod:checkout:result', () => null)
-  const lastInput = useMawjodRef<CheckoutInput | null>('mawjod:checkout:input', () => null)
+
+  return useCheckoutFlow<CheckoutInput, CheckoutResult>('mawjod:checkout', 'useCheckout', (input, key) =>
+    api.checkout.place(input, { idempotencyKey: key }),
+  )
+}
+
+/**
+ * `POST /guest/checkout`: the same attempt pair and retry rules as `useCheckout`, for a shopper who
+ * is not signed in. Open while `checkout.guest_enabled` is on; cash on delivery only.
+ *
+ * On success the shared cart state is emptied, because the server released the guest token with
+ * the cart it bought. Nobody is signed in afterwards, and `order.customer` is always `null`.
+ */
+export function useGuestCheckout(): UseGuestCheckoutReturn {
+  const api = useMawjodApi()
+  const cart = useCart()
+
+  return useCheckoutFlow<GuestCheckoutInput, GuestCheckoutResult>(
+    'mawjod:guest-checkout',
+    'useGuestCheckout',
+    async (input, key) => {
+      const placed = await api.guest.checkout(input, { idempotencyKey: key })
+
+      cart.setCart(null)
+      cart.setQuote(null)
+
+      return placed
+    },
+  )
+}
+
+function useCheckoutFlow<TInput extends { operation_id?: string }, TResult extends { order: Order | GuestOrder }>(
+  prefix: string,
+  name: string,
+  call: (input: TInput, idempotencyKey: string) => Promise<TResult>,
+): CheckoutFlowReturn<TInput, TResult> {
+  const task = useMawjodTask(prefix)
+  const attempt = useMawjodRef<CheckoutAttempt | null>(`${prefix}:attempt`, () => null)
+  const result = useMawjodRef<TResult | null>(`${prefix}:result`, () => null)
+  const lastInput = useMawjodRef<TInput | null>(`${prefix}:input`, () => null)
   const staleCart = useMawjodRef<(MawjodApiError & { code: StaleCartErrorCode }) | null>(
-    'mawjod:checkout:stale-cart',
+    `${prefix}:stale-cart`,
     () => null,
   )
 
-  async function submit(input: CheckoutInput, current: CheckoutAttempt): Promise<CheckoutResult> {
+  async function submit(input: TInput, current: CheckoutAttempt): Promise<TResult> {
     attempt.value = current
     lastInput.value = input
     staleCart.value = null
 
     try {
       const placed = await runTask(task, () =>
-        api.checkout.place(
-          { ...input, operation_id: current.operationId },
-          { idempotencyKey: current.idempotencyKey },
-        ),
+        call({ ...input, operation_id: current.operationId }, current.idempotencyKey),
       )
 
       result.value = placed
@@ -96,7 +136,7 @@ export function useCheckout(): UseCheckoutReturn {
       const payload = input ?? lastInput.value
 
       if (current === null || payload === null) {
-        throw new Error('[@mawjod/nuxt] useCheckout().retry() needs an earlier place() to replay.')
+        throw new Error(`[@mawjod/nuxt] ${name}().retry() needs an earlier place() to replay.`)
       }
 
       return submit(payload, current)

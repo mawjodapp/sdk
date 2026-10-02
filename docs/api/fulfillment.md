@@ -1,7 +1,9 @@
 # `fulfillment`
 
-Delivery and pickup quoting, and the list of pickup points. Both calls require an authenticated
-customer, including the pickup-locations list, which is not public.
+Delivery and pickup quoting, and the list of pickup points. Both calls require a signed-in
+customer, including the pickup-locations list. A guest checkout reads the same two from
+[`guest.fulfillment`](/api/guest#guest-fulfillment-quotes) while the store has
+`checkout.guest_enabled` on.
 
 ```ts
 mawjod.fulfillment.quotes(input)

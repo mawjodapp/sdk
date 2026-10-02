@@ -43,6 +43,8 @@ export type AreasQuery = {
     level?: AdministrativeAreaLevel
     /** A single area UUIDv7. Anything else is a 422. */
     parent?: string
+    /** Switched-off areas are left out unless this is `false`. */
+    active?: boolean
   }
 }
 

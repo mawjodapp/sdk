@@ -19,7 +19,8 @@ export interface FulfillmentNamespace {
    * A destination outside every active zone answers `422 outside_service_area`.
    */
   quotes(input: FulfillmentQuoteInput): Promise<FulfillmentQuote>
-  /** Active pickup locations. Not paginated. Requires an authenticated customer. */
+  /** Active pickup locations. Not paginated. Requires a signed-in customer; a guest reads
+   * `guest.fulfillment.pickupLocations()`. */
   pickupLocations(): Promise<PickupLocation[]>
 }
 

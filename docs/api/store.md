@@ -143,6 +143,41 @@ const requiresVerification = settings['auth.customer_verification_required']?.va
 When a store turns it on, `checkout.place()` answers `403 customer_not_verified` until the identity
 is verified. See [Authentication → verification](/guide/authentication#verification).
 
+### Guest checkout and sign-in by code
+
+```ts
+settings['checkout.guest_enabled']    // boolean
+settings['auth.otp_signin_enabled']   // boolean
+```
+
+Both are off by default, and a missing key reads as off.
+
+`checkout.guest_enabled` lets a shopper who is not signed in place a cash order with an email and
+a phone. It only takes effect while `auth.customer_verification_required` is off, so a theme reads
+the two together:
+
+```ts
+const guestCheckout =
+  settings['checkout.guest_enabled']?.value === true &&
+  settings['auth.customer_verification_required']?.value !== true
+
+// true:  the checkout page offers "continue as guest" beside "sign in"
+// false: the checkout page asks the shopper to sign in first
+```
+
+`auth.otp_signin_enabled` adds sign-in by a six-digit code beside the password:
+
+```ts
+const offersCode = settings['auth.otp_signin_enabled']?.value === true
+
+// true:  the sign-in form offers "email me a code"
+// false: password only
+```
+
+A theme that calls a switched-off surface anyway gets `403 guest_checkout_disabled` or
+`403 otp_signin_disabled`. See [`guest`](/api/guest) and
+[`auth` → Sign-in by code](/api/auth#sign-in-by-code).
+
 ### Ordering rules
 
 ```ts

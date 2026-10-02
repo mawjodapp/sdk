@@ -31,6 +31,12 @@ export interface VerifyInput {
   code: string
 }
 
+export interface LoginWithCodeInput {
+  identity: string
+  /** The six digits sent by `requestSignInCode`. */
+  code: string
+}
+
 export interface ResetPasswordInput {
   identity: string
   code: string
@@ -54,6 +60,17 @@ export interface AuthNamespace {
    * account on a store that requires verification. Do not try to tell a caller which one it was.
    */
   login(input: LoginInput): Promise<AuthSession>
+  /**
+   * Sends a six-digit sign-in code, valid once for ten minutes, while `auth.otp_signin_enabled` is
+   * on; otherwise `403 otp_signin_disabled`. Answers 202 whether or not the account exists, so show
+   * the same "check your inbox" either way.
+   */
+  requestSignInCode(identity: string): Promise<AcceptedStatus>
+  /**
+   * Signs in with a code: the same session and result as `login`. A wrong, spent or expired code
+   * and an unknown account all answer `422 invalid_identity_challenge`; five wrong tries burn it.
+   */
+  loginWithCode(input: LoginWithCodeInput): Promise<AuthSession>
   verify(input: VerifyInput): Promise<Customer>
   /** Answers 202 whether or not an eligible account exists. */
   resendVerification(identity: string): Promise<AcceptedStatus>
@@ -71,6 +88,16 @@ export function createAuthNamespace(transport: Transport): AuthNamespace {
 
     login: (input) =>
       transport.data<AuthSession>({ method: 'POST', path: '/customer/auth/login', body: input }),
+
+    requestSignInCode: (identity) =>
+      transport.data<AcceptedStatus>({
+        method: 'POST',
+        path: '/customer/auth/otp/request',
+        body: { identity },
+      }),
+
+    loginWithCode: (input) =>
+      transport.data<AuthSession>({ method: 'POST', path: '/customer/auth/otp/verify', body: input }),
 
     verify: (input) =>
       transport.data<Customer>({ method: 'POST', path: '/customer/auth/verify', body: input }),

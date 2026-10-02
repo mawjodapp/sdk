@@ -60,6 +60,7 @@ export type { AddCartLineInput, CartNamespace } from './resources/cart.js'
 export type {
   AuthNamespace,
   LoginInput,
+  LoginWithCodeInput,
   RegisterInput,
   ResetPasswordInput,
   VerifyInput,
@@ -96,6 +97,14 @@ export type {
   FulfillmentNamespace,
   FulfillmentQuoteInput,
 } from './resources/fulfillment.js'
+export type {
+  GuestAddressInput,
+  GuestCheckoutInput,
+  GuestCheckoutResult,
+  GuestCustomerInput,
+  GuestNamespace,
+  GuestQuoteInput,
+} from './resources/guest.js'
 export type { PlatformNamespace } from './resources/platform.js'
 
 export type * from './types.js'

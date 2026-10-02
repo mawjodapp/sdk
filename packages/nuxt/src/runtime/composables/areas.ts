@@ -28,3 +28,18 @@ export function useAreas(
     { watch: [resolved], ...options },
   )
 }
+
+/** `GET /guest/areas`: the same areas for a guest delivery address. Open while guest checkout is on. */
+export function useGuestAreas(
+  query?: MaybeRefOrGetter<AreasQuery | undefined>,
+  options: MawjodAsyncOptions = {},
+): MawjodAsyncData<Paginated<AdministrativeArea>> {
+  const api = useMawjodApi()
+  const resolved = computed(() => toValue(query))
+
+  return useAsyncData<Paginated<AdministrativeArea>>(
+    `mawjod:guest-areas:${queryKey(resolved.value)}`,
+    () => api.guest.areas.list(resolved.value),
+    { watch: [resolved], ...options },
+  )
+}

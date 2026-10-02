@@ -3,6 +3,7 @@ import type {
   AuthSession,
   Customer,
   LoginInput,
+  LoginWithCodeInput,
   PasswordResetStatus,
   RegisterInput,
   ResetPasswordInput,
@@ -18,7 +19,8 @@ import { useMawjodApi, useMawjodCartTokenStorage } from './client'
 
 export interface UseCustomerAuthOptions {
   /**
-   * After a successful login, hand the guest cart to the account that just signed in.
+   * After a successful login, by password or by code, hand the guest cart to the account that
+   * just signed in.
    *
    * On by default: a shopper who filled a cart and then logged in expects to keep it. The merge is
    * skipped when no guest cart token is stored, and a failing merge never fails the login. The
@@ -35,6 +37,10 @@ export interface UseCustomerAuthReturn {
   /** Why the post-login cart merge failed, if it did. Never thrown. */
   mergeError: Ref<unknown>
   login: (input: LoginInput) => Promise<AuthSession>
+  /** Sends a sign-in code. 202 whether or not the account exists; `otp_signin_disabled` when off. */
+  requestSignInCode: (identity: string) => Promise<AcceptedStatus>
+  /** Signs in with the code, exactly as `login` does with a password, cart merge included. */
+  loginWithCode: (input: LoginWithCodeInput) => Promise<AuthSession>
   register: (input: RegisterInput) => Promise<Customer>
   verify: (input: VerifyInput) => Promise<Customer>
   resendVerification: (identity: string) => Promise<AcceptedStatus>
@@ -88,23 +94,27 @@ export function useCustomerAuth(options: UseCustomerAuthOptions = {}): UseCustom
     }
   }
 
+  async function signIn(run: () => Promise<AuthSession>): Promise<AuthSession> {
+    const session = await runTask(task, run)
+
+    customer.value = session.customer
+
+    if (mergeCartOnLogin) {
+      await mergeGuestCart()
+    }
+
+    return session
+  }
+
   return {
     customer,
     isAuthenticated: computed(() => customer.value !== null),
     pending: task.pending,
     error: task.error,
     mergeError,
-    login: async (input) => {
-      const session = await runTask(task, () => api.auth.login(input))
-
-      customer.value = session.customer
-
-      if (mergeCartOnLogin) {
-        await mergeGuestCart()
-      }
-
-      return session
-    },
+    login: (input) => signIn(() => api.auth.login(input)),
+    requestSignInCode: (identity) => runTask(task, () => api.auth.requestSignInCode(identity)),
+    loginWithCode: (input) => signIn(() => api.auth.loginWithCode(input)),
     register: (input) => runTask(task, () => api.auth.register(input)),
     verify: (input) => runTask(task, () => api.auth.verify(input)),
     resendVerification: (identity) => runTask(task, () => api.auth.resendVerification(identity)),

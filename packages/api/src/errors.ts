@@ -45,6 +45,9 @@ export type OrderingRuleErrorCode =
  * The complete checkout failure family, source-verified against
  * `App\Modules\Order\Exceptions\CheckoutFailed`.
  *
+ * `guest_checkout_disabled` (403) answers every `/guest/*` call while `checkout.guest_enabled` is off
+ * or verification is required.
+ *
  * `customer_not_verified` only arrives when the store has turned on
  * `auth.customer_verification_required`, which is off by default. Handle it, because any store may
  * turn it on, but do not build the flow as though every checkout demands a verified identity.
@@ -56,6 +59,7 @@ export type CheckoutErrorCode =
   | 'cart_not_found'
   | 'payment_method_unavailable'
   | 'customer_not_verified'
+  | 'guest_checkout_disabled'
 
 /**
  * Documented `code` values. Left open with `(string & {})` on purpose: the server may introduce a
@@ -76,6 +80,7 @@ export type MawjodErrorCode =
   | 'outside_service_area'
   | 'identity_unavailable'
   | 'invalid_identity_challenge'
+  | 'otp_signin_disabled'
   | 'cancellation_window_closed'
   | 'payment_already_resolved'
   | 'payment_provider_unavailable'
@@ -208,6 +213,7 @@ const CHECKOUT_CODES: ReadonlySet<string> = new Set([
   'cart_not_found',
   'payment_method_unavailable',
   'customer_not_verified',
+  'guest_checkout_disabled',
   'ordering_disabled',
   'outside_ordering_hours',
   'order_below_minimum',
