@@ -12,6 +12,7 @@ import { createFulfillmentNamespace, type FulfillmentNamespace } from './resourc
 import { createGuestNamespace, type GuestNamespace } from './resources/guest.js'
 import { createOrdersNamespace, type OrdersNamespace } from './resources/orders.js'
 import { createPlatformNamespace, type PlatformNamespace } from './resources/platform.js'
+import { createPricingNamespace, type PricingNamespace } from './resources/pricing.js'
 import { createReturnsNamespace, type ReturnsNamespace } from './resources/returns.js'
 import { createSearchNamespace, type SearchNamespace } from './resources/search.js'
 import { createStoreNamespace, type StoreNamespace } from './resources/store.js'
@@ -71,6 +72,7 @@ export interface MawjodClient {
   fulfillment: FulfillmentNamespace
   guest: GuestNamespace
   campaign: CampaignNamespace
+  pricing: PricingNamespace
   platform: PlatformNamespace
 }
 
@@ -109,6 +111,7 @@ export function createMawjodClient(options: MawjodClientOptions): MawjodClient {
     fulfillment: createFulfillmentNamespace(transport),
     guest: createGuestNamespace(transport),
     campaign: createCampaignNamespace(transport),
+    pricing: createPricingNamespace(transport),
     platform: createPlatformNamespace(transport),
   }
 }

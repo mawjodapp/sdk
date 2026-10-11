@@ -107,6 +107,7 @@ export type {
   GuestQuoteInput,
 } from './resources/guest.js'
 export type { CampaignNamespace, WinClaimInput, WinCodeInput } from './resources/campaign.js'
+export type { PricingNamespace, ProductPricesInput } from './resources/pricing.js'
 export type { PlatformNamespace } from './resources/platform.js'
 
 export type * from './types.js'

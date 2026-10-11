@@ -814,6 +814,34 @@ export interface WinClaim {
   prize: WinPrize
 }
 
+/* -------------------------------------------------------------------------- */
+/* Display prices                                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * `percentage` carries `value` in basis points (1500 = 15%); `fixed_amount` in minor units of the
+ * store currency.
+ */
+export interface DisplayDiscount {
+  name_ar: string
+  name_en: string
+  type: 'percentage' | 'fixed_amount'
+  value: number
+}
+
+export interface VariantDisplayPrice {
+  variant_id: string
+  base_minor: number
+  /** What the cart will quote for one unit today. Equal to `base_minor` when no sale applies. */
+  effective_minor: number
+  discount: DisplayDiscount | null
+}
+
+export interface ProductDisplayPrice {
+  product_id: string
+  variants: VariantDisplayPrice[]
+}
+
 /**
  * A short-lived, single-use provider redirect. Never persisted server-side, so it cannot be
  * re-read: start a new session instead. Nothing settles here; only the provider's signed webhook
