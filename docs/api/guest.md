@@ -39,7 +39,8 @@ checkout(input: GuestCheckoutInput, options?: CheckoutOptions): Promise<GuestChe
 
 ```ts
 const { order, idempotencyKey, operationId } = await mawjod.guest.checkout({
-  customer: { email: 'nour@example.test', phone: '+201000000001', name: 'Nour Hassan' },
+  // The phone alone is enough; an email only adds the order emails.
+  customer: { phone: '+201000000001', name: 'Nour Hassan' },
   fulfillment_method: 'delivery',
   payment_method: 'cod',
   address: {
@@ -58,7 +59,7 @@ const { order, idempotencyKey, operationId } = await mawjod.guest.checkout({
 
 ```ts
 interface GuestCheckoutInput {
-  customer: { email: string; phone: string; name?: string | null }
+  customer: { email?: string | null; phone: string; name?: string | null }
   fulfillment_method: 'delivery' | 'pickup'
   payment_method: 'cod'
   address?: GuestAddressInput | null
@@ -73,7 +74,7 @@ type GuestAddressInput = Omit<AddressInput, 'is_default'>
 
 | Field | Notes |
 | --- | --- |
-| `customer.email` | Required. The account with this email receives the order (phone, in phone identity mode). |
+| `customer.email` | Optional since backend v1.15.0. Given, the account with this email receives the order (phone, in phone identity mode) and the order emails go to it. Left out, the account is keyed by the phone and no order email is sent. |
 | `customer.phone` | Required, E.164. |
 | `customer.name` | Optional, up to 120 characters. Kept on a new account only. |
 | `payment_method` | `cod` only. A hosted gateway needs a signed-in customer to open its payment session. |
@@ -85,8 +86,10 @@ type GuestAddressInput = Omit<AddressInput, 'is_default'>
 
 The order goes to the account with that identity. When there is none, one is created with no
 password; it can [sign in by code](/api/auth#sign-in-by-code) or set a password through password
-recovery. A delivery address is saved to that account's address book. Nobody is signed in by this
-call, and the response is identical whether the account existed or not.
+recovery. An account created without an email has no inbox to receive a code or a reset, so it
+stays reachable by the store's own contact only. A delivery address is saved to that account's
+address book. Nobody is signed in by this call, and the response is identical whether the account
+existed or not.
 
 Only the guest token's cart is bought, and promotions are priced as for any guest, so a coupon
 limited to the account's own history does not apply here.
@@ -117,7 +120,7 @@ interface GuestCheckoutResult {
 type GuestOrder = Omit<Order, 'customer'> & { customer: null }
 ```
 
-`customer` is always `null`, so the response never says whether the email already had an account.
+`customer` is always `null`, so the response never says whether the identity already had an account.
 
 The order comes back here once. Reading it again needs that account signed in, so render the
 confirmation from this result rather than linking to an order page.

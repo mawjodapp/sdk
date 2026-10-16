@@ -15,7 +15,11 @@ import type { AddressInput, AreasQuery } from './customer.js'
 
 /** Who the order is for. The account with this identity receives it, created when none exists. */
 export interface GuestCustomerInput {
-  email: string
+  /**
+   * Optional since backend v1.15.0. Left out, the order's account is keyed by the phone instead,
+   * and no order email is sent.
+   */
+  email?: string | null
   /** E.164, e.g. `+201000000001`. */
   phone: string
   /** Kept on a new account only. */

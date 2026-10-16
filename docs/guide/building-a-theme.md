@@ -794,7 +794,7 @@ const guestCheckout = computed(
 // guest, guestCheckout false: sign in first
 ```
 
-The guest form collects an email, a phone and an optional name, and for delivery the address
+The guest form collects a phone, with an email and a name optional, and for delivery the address
 itself, with areas from `useGuestAreas()` and a quote from `useGuestFulfillment()` keyed on the
 address's position. It pays cash only.
 

@@ -34,7 +34,8 @@ describe('guest checkout', () => {
 
   it('refuses to send without a token, and keeps the token when the server refuses', async () => {
     const { client: empty, calls: none } = createHarness([])
-    const input = { customer, fulfillment_method: 'pickup' as const, payment_method: 'cod' as const }
+    // No email on purpose: a guest contact is complete with the phone alone.
+    const input = { customer: { phone: '+201000000001' }, fulfillment_method: 'pickup' as const, payment_method: 'cod' as const }
 
     await expect(empty.guest.checkout(input)).rejects.toThrow(/needs a guest cart token/)
     expect(none).toHaveLength(0)
