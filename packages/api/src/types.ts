@@ -995,6 +995,8 @@ export interface HealthChecks {
   valkey: boolean
   meilisearch: boolean
   store: boolean
+  /** False when `MAWJOD_MODE` and the backend's composer.json disagree, or either is missing. */
+  mode: boolean
 }
 
 export interface HealthReady {
@@ -1004,5 +1006,6 @@ export interface HealthReady {
   details?: {
     store_id: string
     store_status: string
+    mode: StoreMode
   }
 }
