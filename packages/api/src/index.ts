@@ -110,4 +110,5 @@ export type { CampaignNamespace, WinClaimInput, WinCodeInput } from './resources
 export type { PricingNamespace, ProductPricesInput } from './resources/pricing.js'
 export type { PlatformNamespace } from './resources/platform.js'
 
+export { StoreMode } from './store-mode.js'
 export type * from './types.js'

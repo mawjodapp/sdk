@@ -6,6 +6,8 @@
  * `name_ar`/`name_en` on cart lines) are real but absent from the Scribe examples.
  */
 
+import type { StoreMode } from './store-mode.js'
+
 /**
  * Money is always integer minor units plus a currency. Never a float: a float cannot represent a
  * piastre and the API never sends one.
@@ -77,12 +79,6 @@ export interface SearchResults<T> {
 /* -------------------------------------------------------------------------- */
 
 export type StoreLocale = 'ar' | 'en'
-
-/**
- * How the deployment sells: one shop, or a marketplace whose vendors sell inside it. Fixed at
- * install, so read it once and keep it.
- */
-export type StoreMode = 'single' | 'marketplace'
 
 export interface StoreInfo {
   id: string

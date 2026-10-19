@@ -28,7 +28,7 @@ interface StoreInfo {
   status: string          // e.g. 'draft'
   name: string            // already localized by the server
   default_locale: 'ar' | 'en'
-  mode: 'single' | 'marketplace'
+  mode: StoreMode         // StoreMode.Single or StoreMode.Marketplace
   branding: {
     logo: Image | null
     icon: Image | null
@@ -51,8 +51,17 @@ interface DeliveryEstimate {
 the catalog returns, renditions and all. Either is `null` when the store has not set one, so keep a
 fallback to `name`. See [Branding](#branding) below.
 
-`mode` is `single` for one shop and `marketplace` when vendors sell inside it. It is fixed when
-the store is installed and never changes, so read it once.
+`mode` is `StoreMode.Single` for one shop and `StoreMode.Marketplace` when vendors sell inside it.
+It is fixed when the store is installed and never changes, so read it once. Compare against the
+exported constant rather than the string:
+
+```ts
+import { StoreMode } from '@mawjod/api'
+
+if (store.mode === StoreMode.Marketplace) {
+  // show vendor names, the vendor filter, "become a seller"
+}
+```
 
 `default_locale` is the store's own default, which is what the API falls back to when you send no
 `Accept-Language`. It is not necessarily the locale of the response you are holding; read
