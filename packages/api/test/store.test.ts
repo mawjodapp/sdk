@@ -8,6 +8,7 @@ const base: Omit<StoreInfo, 'delivery_estimate'> = {
   status: 'active',
   name: 'Shop',
   default_locale: 'ar',
+  mode: 'single',
   branding: { logo: null, icon: null },
 }
 

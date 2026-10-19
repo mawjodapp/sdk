@@ -78,12 +78,19 @@ export interface SearchResults<T> {
 
 export type StoreLocale = 'ar' | 'en'
 
+/**
+ * How the deployment sells: one shop, or a marketplace whose vendors sell inside it. Fixed at
+ * install, so read it once and keep it.
+ */
+export type StoreMode = 'single' | 'marketplace'
+
 export interface StoreInfo {
   id: string
   status: string
   /** Already localized by the server from `Accept-Language`. */
   name: string
   default_locale: StoreLocale
+  mode: StoreMode
   /**
    * The store's brand images, already resolved to urls. This is where a theme reads the logo:
    * `StoreSettings` carries the bare asset ids and resolves nothing.

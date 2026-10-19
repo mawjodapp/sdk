@@ -105,7 +105,7 @@ const { data: store, pending, error } = await useStoreInfo()
 </template>
 ```
 
-`StoreInfo` is `{ id, status, name, default_locale, branding, delivery_estimate }`. `name` is
+`StoreInfo` is `{ id, status, name, default_locale, mode, branding, delivery_estimate }`. `name` is
 already localized by the server. `branding.logo` and `branding.icon` are resolved images, each
 `null` until the store uploads one, so bind the logo through `imageSrcSet()` and fall back to
 `name`. `delivery_estimate` is the delivery time to show before the shopper has an address, or
