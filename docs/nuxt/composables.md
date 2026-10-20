@@ -231,8 +231,8 @@ useCategories(
 `GET /catalog/categories`, keyed `mawjod:categories:<key>`. The query may be a ref or a getter; the
 list refetches when it changes.
 
-This is what a nav is built from. The list is flat: categories have no hierarchy, so there is
-nothing to nest.
+One page of categories. For a nav, which needs every category and their nesting, use
+[`useAllCategories()`](#useallcategories).
 
 ```vue
 <script setup lang="ts">
@@ -262,6 +262,25 @@ design. See [`catalog.categories.list`](/api/catalog#catalog-categories-list).
 category has no picture. Only the listing rows carry one. The `category` on a product summary is a
 plain `Category` and never does, which is why they are two types. See
 [`catalog` → Images](/api/catalog#images).
+
+## `useAllCategories()`
+
+```ts
+useAllCategories(options?: MawjodAsyncOptions)
+```
+
+Every listed category, all pages, keyed `mawjod:categories:all` so a header and a page share one
+read. `data` is `CategoryListItem[]`. Each row has a `parent_id`; build the tree with `categoryTree`
+and a breadcrumb with `categoryAncestors` from `@mawjod/api`.
+
+```vue
+<script setup lang="ts">
+import { categoryTree } from '@mawjod/api'
+
+const { data } = await useAllCategories({ dedupe: 'defer' })
+const topLevel = computed(() => categoryTree(data.value ?? []).map((node) => node.category))
+</script>
+```
 
 ## `useBrands()`
 

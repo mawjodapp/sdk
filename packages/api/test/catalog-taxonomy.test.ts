@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { CATEGORY_PAGE_LIMIT } from '../src/index.js'
 import type { CatalogTaxonomyQuery } from '../src/index.js'
 import { createHarness } from './helpers.js'
 
@@ -34,6 +35,7 @@ describe('catalog.categories.list', () => {
           name: 'أدوات المطبخ',
           slug: 'ادوات-المطبخ',
           image: null,
+          parent_id: '01920000-0000-7000-8000-000000000001',
         }),
       },
     ])
@@ -66,6 +68,7 @@ describe('catalog.categories.list', () => {
     expect(page.data[0]!.slug).toBe('ادوات-المطبخ')
     // Only the listing row carries an image; `ProductSummary.category` is the plain `Category`.
     expect(page.data[0]!.image).toBeNull()
+    expect(page.data[0]!.parent_id).toBe('01920000-0000-7000-8000-000000000001')
     expect(page.meta.current_page).toBe(2)
     expect(page.meta.total).toBe(63)
   })
@@ -88,5 +91,35 @@ describe('catalog.brands.list', () => {
     await client.catalog.brands.list()
 
     expect(calls[0]!.path).toBe('/api/v1/catalog/brands')
+  })
+})
+
+describe('catalog.categories.all', () => {
+  function pageOf(id: string, current: number, last: number): Record<string, unknown> {
+    const envelope = taxonomyEnvelope({ id, locale: 'en', name: id, slug: id, image: null, parent_id: null })
+    return { ...envelope, meta: { request_id: 'req', current_page: current, per_page: 100, last_page: last, total: last } }
+  }
+
+  it('reads every page, largest page size, and stops at the last one', async () => {
+    const { client, calls } = createHarness([
+      { status: 200, body: pageOf('clothing', 1, 2) },
+      { status: 200, body: pageOf('shirts', 2, 2) },
+    ])
+
+    const rows = await client.catalog.categories.all()
+
+    expect(rows.map((row) => row.id)).toEqual(['clothing', 'shirts'])
+    expect(calls.map((call) => decodeURIComponent(call.path))).toEqual([
+      '/api/v1/catalog/categories?page[number]=1&page[size]=100&sort=created_at',
+      '/api/v1/catalog/categories?page[number]=2&page[size]=100&sort=created_at',
+    ])
+  })
+
+  it('stops at the page cap even if the server keeps saying there is more', async () => {
+    const { client, calls } = createHarness([{ status: 200, body: pageOf('loop', 1, 999) }])
+
+    await client.catalog.categories.all()
+
+    expect(calls).toHaveLength(CATEGORY_PAGE_LIMIT)
   })
 })

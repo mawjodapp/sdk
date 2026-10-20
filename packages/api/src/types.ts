@@ -203,6 +203,8 @@ export interface Category {
  */
 export interface CategoryListItem extends Category {
   image: Image | null
+  /** The category this one sits under; `null` at the top. Build the tree with `categoryTree`. */
+  parent_id: string | null
 }
 
 /** A brand as the storefront sees it: already resolved to one locale. */
