@@ -39,6 +39,9 @@ export type {
   WinCampaignErrorCode,
 } from './errors.js'
 
+export { categoryAncestors, categoryTree } from './category-tree.js'
+export type { CategoryNode, CategoryTreeItem } from './category-tree.js'
+
 export { imageSrcSet } from './images.js'
 export type { ImageSrcSet } from './images.js'
 
@@ -50,6 +53,7 @@ export type { FilterRange, FilterValue, PageValue, QueryInput, QueryScalar, Sort
 export type { HeadersOption } from './http.js'
 
 export type { StoreNamespace } from './resources/store.js'
+export { CATEGORY_PAGE_LIMIT } from './resources/catalog.js'
 export type {
   CatalogNamespace,
   CatalogProductsQuery,

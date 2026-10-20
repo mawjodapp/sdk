@@ -77,6 +77,17 @@ export function useCategories(
 }
 
 /**
+ * Every listed category, all pages, for a navigation that needs the whole tree. Build the tree
+ * with `categoryTree` and a breadcrumb with `categoryAncestors` from `@mawjod/api`. One key for
+ * the whole app, so a header and a page that both call it share one read.
+ */
+export function useAllCategories(options: MawjodAsyncOptions = {}): MawjodAsyncData<CategoryListItem[]> {
+  const api = useMawjodApi()
+
+  return useAsyncData<CategoryListItem[]>('mawjod:categories:all', () => api.catalog.categories.all(), options)
+}
+
+/**
  * `GET /catalog/brands`.
  *
  * The same contract as `useCategories`: page and a `created_at` sort, no filters, and only brands

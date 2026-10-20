@@ -11,6 +11,7 @@ not interchangeable.
 mawjod.catalog.products.list(query?)
 mawjod.catalog.products.get(slug)
 mawjod.catalog.categories.list(query?)
+mawjod.catalog.categories.all()
 mawjod.catalog.brands.list(query?)
 ```
 
@@ -380,10 +381,11 @@ filter key is a 422 already.
 
 ### Empty categories are hidden
 
-Every entry in this listing has at least one visible product behind it. The listing uses exactly
-the same visibility predicate as the public product list, so any `slug` you get back, passed as
-`filter[category]` to `catalog.products.list()`, returns at least one product. A nav entry built
-from this list can never lead to an empty page.
+Every entry in this listing has at least one visible product behind it, either placed in it or in
+one of its sub-categories. The listing uses exactly the same visibility predicate as the public
+product list, so a nav entry built from this list can never lead to an empty page: a category with
+no products of its own still has sub-categories to show. A category whose parent is switched off is
+left out, along with everything under it.
 
 While `catalog.hide_out_of_stock` is on, that predicate includes stock, so a category whose products
 have all sold out leaves the listing until one is back in stock.
@@ -394,6 +396,32 @@ not missing: it is visible on the staff side, where the vendor manages it, and i
 soon as a product lands in it. Archiving the last product empties a category back out of the
 listing without the category itself being touched.
 :::
+
+### Sub-categories
+
+Categories nest to any depth. The listing stays flat; each row carries `parent_id`, `null` at the
+top, and every listed row's parent is listed too. Build the tree with the helpers:
+
+```ts
+import { categoryAncestors, categoryTree } from '@mawjod/api'
+
+const rows = await mawjod.catalog.categories.all()
+const tree = categoryTree(rows) // [{ category, children: [...] }], in the order the rows came
+const trail = categoryAncestors(rows, current.id) // the categories above, top first
+```
+
+`filter[category]` on `catalog.products.list()` is exact: a parent's slug returns only the products
+placed in that category, not its sub-categories'. Link the sub-categories from the parent's page.
+
+## `catalog.categories.all()`
+
+```ts
+all(): Promise<CategoryListItem[]>
+```
+
+Every listed category, read 100 at a time until the last page, in the server's order. A navigation
+needs the whole tree, so this is the call to build one from. It stops after `CATEGORY_PAGE_LIMIT`
+(20) pages, so a listing that never ends cannot hang a render.
 
 ### `Category` and `CategoryListItem`
 

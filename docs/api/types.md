@@ -236,6 +236,8 @@ interface ImageRendition {
 
 interface CategoryListItem extends Category {
   image: Image | null
+  /** The category this one sits under; `null` at the top. */
+  parent_id: string | null
 }
 
 interface BrandListItem extends Brand {
