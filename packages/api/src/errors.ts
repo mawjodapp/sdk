@@ -74,6 +74,15 @@ export type WinCampaignErrorCode =
   | 'win_pool_empty'
 
 /**
+ * Vendor signup's refusals. `vendor_signup_code_invalid` covers a wrong, expired and used-up code
+ * alike; ask for a new code rather than telling the three apart.
+ */
+export type VendorSignupErrorCode =
+  | 'vendor_registration_closed'
+  | 'vendor_signup_code_invalid'
+  | 'vendor_email_unavailable'
+
+/**
  * Documented `code` values. Left open with `(string & {})` on purpose: the server may introduce a
  * new code at any time and a client that crashes on one is worse than a client that falls through
  * to a generic message.
@@ -88,6 +97,7 @@ export type MawjodErrorCode =
   | 'untrusted_host'
   | CheckoutErrorCode
   | WinCampaignErrorCode
+  | VendorSignupErrorCode
   | 'variant_not_purchasable'
   | 'pricing_conflict'
   | 'outside_service_area'

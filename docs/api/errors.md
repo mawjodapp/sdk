@@ -167,6 +167,11 @@ type WinCampaignErrorCode =
   | 'win_daily_limit_reached'
   | 'win_pool_empty'
 
+type VendorSignupErrorCode =
+  | 'vendor_registration_closed'
+  | 'vendor_signup_code_invalid'
+  | 'vendor_email_unavailable'
+
 type MawjodErrorCode =
   | 'unauthenticated'
   | 'forbidden'
@@ -177,6 +182,7 @@ type MawjodErrorCode =
   | 'untrusted_host'
   | CheckoutErrorCode
   | WinCampaignErrorCode
+  | VendorSignupErrorCode
   | 'variant_not_purchasable'
   | 'pricing_conflict'
   | 'outside_service_area'
@@ -213,6 +219,8 @@ reach a shopper. See [`store.settings()` → Guest checkout and sign-in by code]
 `WinCampaignErrorCode` is the win page's refusals. `win_code_not_accepted` covers a code that never
 existed and one already used, on purpose, so its message has to stay vague. See
 [`campaign` → Refusals](/api/campaign#refusals) for what a page says for each.
+
+`VendorSignupErrorCode` is a marketplace's seller signup refusals; see [`marketplace` → Refusals](/api/marketplace#refusals).
 
 `untrusted_host` is a `400` refused before the endpoint ran: the request's `Host` header is not in
 the deployment's `TRUSTED_HOSTS`. It is a deployment or proxy misconfiguration rather than anything

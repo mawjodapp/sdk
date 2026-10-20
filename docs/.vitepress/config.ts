@@ -53,6 +53,7 @@ export default defineConfig({
             { text: 'fulfillment', link: '/api/fulfillment' },
             { text: 'guest', link: '/api/guest' },
             { text: 'campaign', link: '/api/campaign' },
+            { text: 'marketplace', link: '/api/marketplace' },
             { text: 'platform', link: '/api/platform' },
           ],
         },

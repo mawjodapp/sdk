@@ -853,6 +853,26 @@ connection is answered `win_code_not_accepted` even when the first one won. Refu
 `error`; see [`campaign` → Refusals](/api/campaign#refusals) for the words to show, and keep the
 `win_code_not_accepted` message vague.
 
+## `useVendorSignup()`
+
+```ts
+useVendorSignup(): {
+  email: Ref<string | null>
+  application: Ref<VendorApplication | null>
+  pending: Ref<boolean>
+  error: Ref<unknown>
+  sendCode: (input: VendorSignupCodeInput) => Promise<void>
+  apply: (input: VendorSignupInput) => Promise<VendorApplication>
+  reset: () => void
+}
+```
+
+`/marketplace/vendor-signup`, in a marketplace while `marketplace.vendor_registration` is open.
+`sendCode()` sets `email`, so the page can move to the code-and-details step; `apply()` sets
+`application`, whose `status` says whether the business is waiting or already approved. `reset()`
+forgets both, for "use a different email". Refusals land in `error`; see
+[`marketplace` → Refusals](/api/marketplace#refusals).
+
 ## `useOrders()`
 
 ```ts
