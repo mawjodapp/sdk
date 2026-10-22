@@ -1,5 +1,5 @@
 import type { Transport } from '../http.js'
-import type { AdministrativeArea, Paginated, VendorApplication } from '../types.js'
+import type { AdministrativeArea, Paginated, PublicVendor, VendorApplication } from '../types.js'
 import type { AreasQuery } from './customer.js'
 
 export interface VendorSignupCodeInput {
@@ -53,6 +53,14 @@ export interface MarketplaceNamespace {
     /** The areas a business can be in, for `area_id`. */
     areas(query?: AreasQuery): Promise<Paginated<AdministrativeArea>>
   }
+  vendors: {
+    /**
+     * A seller's public page by slug. `404 not_found` for a seller that is not approved, is
+     * suspended, or does not exist. List its products with
+     * `catalog.products.list({ filter: { vendor: slug } })`.
+     */
+    get(slug: string): Promise<PublicVendor>
+  }
 }
 
 export function createMarketplaceNamespace(transport: Transport): MarketplaceNamespace {
@@ -69,6 +77,10 @@ export function createMarketplaceNamespace(transport: Transport): MarketplaceNam
         transport.data<VendorApplication>({ method: 'POST', path: '/marketplace/vendor-signup', body: input }),
       areas: (query) =>
         transport.list<AdministrativeArea>({ method: 'GET', path: '/marketplace/vendor-signup/areas', query }),
+    },
+    vendors: {
+      get: (slug) =>
+        transport.data<PublicVendor>({ method: 'GET', path: `/marketplace/vendors/${encodeURIComponent(slug)}` }),
     },
   }
 }

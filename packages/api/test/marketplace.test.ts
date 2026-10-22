@@ -73,3 +73,39 @@ describe('vendor signup', () => {
     expect(MarketplaceSettingKey.VendorRegistration).toBe('marketplace.vendor_registration')
   })
 })
+
+describe('seller page', () => {
+  const vendor = {
+    id: 'v-1',
+    slug: 'palm-store',
+    name_ar: 'متجر النخيل',
+    name_en: 'Palm Store',
+    about_ar: null,
+    about_en: 'Dates and oils.',
+    area: { id: 'a-1', name_ar: 'الجيزة', name_en: 'Giza' },
+    logo: null,
+  }
+
+  it('reads a seller by slug, and its products through the catalog filter', async () => {
+    const { client, calls } = createHarness([
+      { body: { data: vendor, meta: { request_id: 'r' } } },
+      { body: { data: [], meta: { request_id: 'r', page: { number: 1, size: 24, total: 0 } } } },
+    ])
+
+    await expect(client.marketplace.vendors.get('palm store')).resolves.toEqual(vendor)
+    await client.catalog.products.list({ filter: { vendor: 'palm-store' } })
+
+    expect(calls.map((call) => [call.method, call.path])).toEqual([
+      ['GET', '/api/v1/marketplace/vendors/palm%20store'],
+      ['GET', '/api/v1/catalog/products?filter%5Bvendor%5D=palm-store'],
+    ])
+  })
+
+  it('surfaces a seller that is not selling as not found', async () => {
+    const { client } = createHarness([{ status: 404, body: problem(404, 'not_found') }])
+
+    const failure = await client.marketplace.vendors.get('gone').catch((error: unknown) => error)
+
+    expect(isMawjodApiError(failure) && failure.status).toBe(404)
+  })
+})
