@@ -36,6 +36,7 @@ export type {
   PayloadIntegrityResource,
   ProblemDocument,
   StaleCartErrorCode,
+  VendorSignupErrorCode,
   WinCampaignErrorCode,
 } from './errors.js'
 
@@ -113,6 +114,12 @@ export type {
 export type { CampaignNamespace, WinClaimInput, WinCodeInput } from './resources/campaign.js'
 export type { PricingNamespace, ProductPricesInput } from './resources/pricing.js'
 export type { PlatformNamespace } from './resources/platform.js'
+export type {
+  MarketplaceNamespace,
+  VendorSignupCodeInput,
+  VendorSignupInput,
+} from './resources/marketplace.js'
 
 export { StoreMode } from './store-mode.js'
+export { MarketplaceSettingKey, VendorRegistration, VendorStatus } from './vendor.js'
 export type * from './types.js'

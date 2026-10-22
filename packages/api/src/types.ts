@@ -7,6 +7,7 @@
  */
 
 import type { StoreMode } from './store-mode.js'
+import type { VendorStatus } from './vendor.js'
 
 /**
  * Money is always integer minor units plus a currency. Never a float: a float cannot represent a
@@ -140,6 +141,13 @@ export interface StoreSettingEntry {
  */
 export interface StoreSettings {
   settings: Record<string, StoreSettingEntry>
+}
+
+/** What `marketplace.vendorSignup.apply()` returns: the new vendor and where it stands. */
+export interface VendorApplication {
+  id: string
+  /** `pending` until an admin decides; `approved` at once when the marketplace approves on its own. */
+  status: VendorStatus
 }
 
 /* -------------------------------------------------------------------------- */
