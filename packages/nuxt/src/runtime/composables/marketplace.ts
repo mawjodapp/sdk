@@ -1,8 +1,29 @@
-import type { VendorApplication, VendorSignupCodeInput, VendorSignupInput } from '@mawjod/api'
-import { type Ref } from 'vue'
+import type { PublicVendor, VendorApplication, VendorSignupCodeInput, VendorSignupInput } from '@mawjod/api'
+import { useAsyncData } from '#imports'
+import { computed, type MaybeRefOrGetter, type Ref, toValue } from 'vue'
 
 import { runTask, useMawjodRef, useMawjodTask } from '../internal'
+import type { MawjodAsyncData, MawjodAsyncOptions } from '../types'
 import { useMawjodApi } from './client'
+
+/**
+ * `GET /marketplace/vendors/{slug}`: a seller's public page. Refetches when the slug changes.
+ * Errors with `404` for a seller that is not approved or is suspended, and on a single shop.
+ * Its products come from `useProducts({ filter: { vendor: slug } })`.
+ */
+export function useVendor(
+  slug: MaybeRefOrGetter<string>,
+  options: MawjodAsyncOptions = {},
+): MawjodAsyncData<PublicVendor> {
+  const api = useMawjodApi()
+  const resolved = computed(() => toValue(slug))
+
+  return useAsyncData<PublicVendor>(
+    `mawjod:marketplace:vendor:${resolved.value}`,
+    () => api.marketplace.vendors.get(resolved.value),
+    { watch: [resolved], ...options },
+  )
+}
 
 export interface UseVendorSignupReturn {
   /** The address the last code went to, set by `sendCode()`. Null before then. */

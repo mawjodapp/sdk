@@ -150,6 +150,29 @@ export interface VendorApplication {
   status: VendorStatus
 }
 
+/**
+ * The seller beside a product or a search hit, in both languages. Link to the seller's page with
+ * `slug`. `null` on every product of a single shop.
+ */
+export interface VendorSummary {
+  id: string
+  slug: string
+  name_ar: string
+  name_en: string
+}
+
+/**
+ * `marketplace.vendors.get(slug)`: a seller's public page. Who they are and where, never how to
+ * reach them: contact and legal details stay with the marketplace.
+ */
+export interface PublicVendor extends VendorSummary {
+  about_ar: string | null
+  about_en: string | null
+  area: { id: string; name_ar: string; name_en: string }
+  /** The seller's logo, or `null` when they have none. */
+  logo: Image | null
+}
+
 /* -------------------------------------------------------------------------- */
 /* Catalog                                                                     */
 /* -------------------------------------------------------------------------- */
@@ -251,6 +274,8 @@ export interface ProductSummary {
   name: string
   category: Category
   brand: Brand
+  /** Who sells it on a marketplace; `null` in a single shop. */
+  vendor: VendorSummary | null
   /** The cheapest variant's price. */
   from_price: Money
   /** The product's lead image, or `null` when it has none. */
@@ -335,6 +360,8 @@ export interface SearchProductHit {
   slug: string
   brand: SearchTaxonomyRef
   category: SearchTaxonomyRef
+  /** As on `ProductSummary`: who sells it, or `null` in a single shop. */
+  vendor: VendorSummary | null
   from_price: Money
   /**
    * The product's first public picture: the same `Image` the catalog returns, renditions included,

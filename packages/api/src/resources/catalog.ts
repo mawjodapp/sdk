@@ -16,12 +16,14 @@ export type CatalogProductsQuery = {
   /** `published_at` or `created_at`, optionally `-` prefixed. */
   sort?: SortValue
   /**
-   * Only `category` and `brand` are accepted, both by slug. A slug does not vary by locale, so the
-   * same value narrows the list under `ar` and `en`. Any other key is a 422.
+   * Only `category`, `brand` and `vendor` are accepted, all by slug. A slug does not vary by
+   * locale, so the same value narrows the list under `ar` and `en`. Any other key is a 422.
+   * `vendor` lists one seller's products on a marketplace; a single shop has none to match.
    */
   filter?: {
     category?: string | null
     brand?: string | null
+    vendor?: string | null
   }
 }
 
