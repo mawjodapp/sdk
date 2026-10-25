@@ -7,7 +7,7 @@ customer, including the pickup-locations list. A guest checkout reads the same t
 
 ```ts
 mawjod.fulfillment.quotes(input)
-mawjod.fulfillment.pickupLocations()
+mawjod.fulfillment.pickupLocations(vendorSlug?)
 ```
 
 ## `fulfillment.quotes()`
@@ -134,11 +134,14 @@ find out while they are still looking at addresses.
 ## `fulfillment.pickupLocations()`
 
 ```ts
-pickupLocations(): Promise<PickupLocation[]>
+pickupLocations(vendorSlug?: string): Promise<PickupLocation[]>
 ```
 
 `GET /api/v1/customer/fulfillment/pickup-locations`. Active pickup locations. Not paginated: a
 bare array.
+
+In a marketplace pass the cart's seller (`cart.vendor?.slug`): checkout takes only that seller's
+points and refuses another with `422 pickup_unavailable`.
 
 ```ts
 interface PickupLocation {
@@ -154,6 +157,7 @@ interface PickupLocation {
   collection_instructions_en: string | null
   is_active: boolean
   area: AdministrativeAreaRef | null
+  vendor: VendorSummary | null   // marketplace: the seller who runs it
   created_at: string | null
   updated_at: string | null
 }

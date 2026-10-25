@@ -41,6 +41,7 @@ interface Cart {
   is_guest: boolean
   guest_token: string | null      // non-null exactly once, at creation
   item_count: number
+  vendor: VendorSummary | null    // marketplace: the cart's one seller; null when empty or single shop
   subtotal: Money
   has_unpurchasable_lines: boolean
   lines: CartLine[]
@@ -152,6 +153,7 @@ interface AddCartLineInput {
   variant_id: string
   quantity: number                      // 1-999
   options?: Record<string, never>       // reserved; release one accepts only {}
+  replace_cart?: boolean                // marketplace: empty the cart first (see below)
 }
 ```
 
@@ -162,6 +164,24 @@ For a guest, this is the response that issues `guest_token`. The client stores i
 `X-Mawjod-Cart-Token` from here on. It is never issued again.
 
 A variant that cannot be sold is `409 variant_not_purchasable`.
+
+In a marketplace a cart buys from one seller. Adding another seller's item is
+`409 cart_vendor_mismatch`, with the seller already in the cart on `problem.cart_vendor`. Ask the
+shopper, then add again with `replace_cart: true`: the cart is emptied (lines and coupon) and the item
+added, and the removed lines come back as `removed` adjustments.
+
+```ts
+import { CartErrorCode, isMawjodApiError } from '@mawjod/api'
+
+try {
+  await mawjod.cart.addLine({ variant_id, quantity: 1 })
+} catch (error) {
+  if (isMawjodApiError(error) && error.code === CartErrorCode.VendorMismatch) {
+    // "Your cart has items from {error.problem.cart_vendor?.name_en}. Empty it and add this?"
+    await mawjod.cart.addLine({ variant_id, quantity: 1, replace_cart: true })
+  }
+}
+```
 
 ## `cart.updateLine()`
 
@@ -224,6 +244,10 @@ cart.adjustments // [{ reason: 'merged_quantity_summed', line_id, variant_id,
 
 The merge is additive and deterministic: identical lines sum, guest-only lines move across, and
 replaying the same token merges only once. On success the client clears the stored token.
+
+In a marketplace a cart holds one seller's items, so the guest cart **replaces** the saved one
+instead. The saved lines come back as `replaced_on_merge` adjustments
+(`CartAdjustmentReason.ReplacedOnMerge`): tell the shopper their saved cart was replaced.
 
 ::: info The token moves to the body here
 Every other cart call carries the guest token in the `X-Mawjod-Cart-Token` header. This one takes it

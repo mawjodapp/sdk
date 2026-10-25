@@ -150,10 +150,12 @@ interface Order {
   status: string
   placed_at: string
   customer: CustomerRef
+  vendor: VendorSummary | null          // marketplace: the seller the order was bought from
   totals: OrderTotals
   fulfillment_method: 'delivery' | 'pickup'
   discount_allocations: OrderDiscountAllocation[]
   address: Record<string, unknown> | null
+  pickup_location: OrderPickupLocation | null  // the pickup point, on a pickup order
   quote: Record<string, unknown>
   lines: OrderLine[]                    // never empty
   payment: Payment | null
@@ -164,9 +166,17 @@ interface Order {
 
 ```ts
 interface CustomerRef {
-  id: string
+  id: string | null   // null only when a marketplace seller's staff read the order
   name: string
   phone: string
+}
+
+interface OrderPickupLocation {
+  id: string
+  name_ar: string
+  name_en: string
+  address_line: string
+  contact_phone: string
 }
 
 interface OrderTotals {
@@ -193,7 +203,7 @@ interface OrderLine {
 interface Payment {
   id: string
   method: string           // 'cod' | 'paymob' | …
-  status: string
+  status: string           // pending, authorized, paid, failed, refunded, or cancelled (its order was cancelled before payment)
   amount: Money
   requires_action: boolean
   settled_at: string | null
@@ -207,10 +217,12 @@ interface OrderFulfillment {
   eta: DeliveryEstimate | null   // { minimum_minutes, maximum_minutes, unit, minimum, maximum }
 }
 
+// The order's steps and its fulfillment's (packing, sent out, delivered), oldest first.
 interface OrderHistoryEntry {
   from_status: string | null
   to_status: string
   actor_type: string
+  actor_vendor: VendorSummary | null   // the seller whose staff made the step; null otherwise
   reason: string | null
   occurred_at: string
 }

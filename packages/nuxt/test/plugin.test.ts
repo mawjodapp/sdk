@@ -59,6 +59,8 @@ describe('the module plugin', () => {
     await install().store.get()
 
     expect(calls[0]!.headers.get('cookie')).toBe('mawjod_session=abc; XSRF-TOKEN=xyz')
+    // Sanctum reads the session cookie only when the request names a stateful origin.
+    expect(calls[0]!.headers.get('referer')).toBe('https://storefront.test/')
     // Only the cookie is asked for: forwarding the whole incoming header set would leak
     // `host`, `accept-encoding` and friends into a different origin's request.
     expect(nuxtHarness().requestHeaderCalls).toEqual([['cookie']])
@@ -74,6 +76,7 @@ describe('the module plugin', () => {
     await install().store.get()
 
     expect(calls[0]!.headers.get('cookie')).toBeNull()
+    expect(calls[0]!.headers.get('referer')).toBeNull()
     expect(nuxtHarness().requestHeaderCalls).toEqual([])
   })
 })

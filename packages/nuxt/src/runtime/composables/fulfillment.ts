@@ -1,6 +1,6 @@
 import type { FulfillmentQuote, FulfillmentQuoteInput, GuestQuoteInput, PickupLocation } from '@mawjod/api'
 import { useAsyncData } from '#imports'
-import { computed, type ComputedRef, type Ref } from 'vue'
+import { computed, type ComputedRef, type MaybeRefOrGetter, type Ref, toValue } from 'vue'
 
 import { runTask, useMawjodRef, useMawjodTask } from '../internal'
 import type { MawjodAsyncOptions } from '../types'
@@ -19,6 +19,14 @@ interface FulfillmentReturn<TQuoteInput> {
 }
 
 export type UseFulfillmentReturn = FulfillmentReturn<FulfillmentQuoteInput>
+
+export interface UseFulfillmentOptions extends MawjodAsyncOptions {
+  /**
+   * Marketplace: the cart's seller slug (`cart.vendor?.slug`). Only that seller's pickup points
+   * are listed, because checkout takes no other. The list reloads when it changes.
+   */
+  vendor?: MaybeRefOrGetter<string | null | undefined>
+}
 export type UseGuestFulfillmentReturn = FulfillmentReturn<GuestQuoteInput>
 
 /**
@@ -27,13 +35,15 @@ export type UseGuestFulfillmentReturn = FulfillmentReturn<GuestQuoteInput>
  * Pickup locations are page data and load on setup; a shipping quote is a `POST` that depends on
  * the chosen address or pickup point, so it is invoked.
  */
-export function useFulfillment(options: MawjodAsyncOptions = {}): UseFulfillmentReturn {
+export function useFulfillment(options: UseFulfillmentOptions = {}): UseFulfillmentReturn {
   const api = useMawjodApi()
+  const { vendor, ...asyncOptions } = options
+  const slug = computed(() => toValue(vendor) ?? undefined)
 
   return useFulfillmentFlow(
     'mawjod:fulfillment',
-    options,
-    () => api.fulfillment.pickupLocations(),
+    { ...asyncOptions, watch: vendor === undefined ? undefined : [slug] },
+    () => api.fulfillment.pickupLocations(slug.value),
     (input: FulfillmentQuoteInput) => api.fulfillment.quotes(input),
   )
 }
@@ -55,7 +65,7 @@ export function useGuestFulfillment(options: MawjodAsyncOptions = {}): UseGuestF
 
 function useFulfillmentFlow<TQuoteInput>(
   prefix: string,
-  options: MawjodAsyncOptions,
+  options: MawjodAsyncOptions & { watch?: ComputedRef<unknown>[] },
   list: () => Promise<PickupLocation[]>,
   quote: (input: TQuoteInput) => Promise<FulfillmentQuote>,
 ): FulfillmentReturn<TQuoteInput> {

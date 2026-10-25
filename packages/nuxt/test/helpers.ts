@@ -47,6 +47,7 @@ export function cartFixture(itemCount: number, id = 'cart-1'): Cart {
     is_guest: false,
     guest_token: null,
     item_count: itemCount,
+    vendor: null,
     subtotal: { minor: itemCount * 1000, currency: 'EGP', tax_inclusive: true },
     has_unpurchasable_lines: false,
     // Typed, so a field added to `CartLine` upstream fails the typecheck here rather than going
