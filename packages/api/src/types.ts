@@ -481,7 +481,11 @@ export interface CartLine {
 }
 
 export interface CartAdjustment {
-  /** e.g. `merged_quantity_summed`. */
+  /**
+   * One of `CartAdjustmentReason`, typed as a string so a newer reason never breaks this client.
+   * In a marketplace, `removed` lists the lines `replace_cart` emptied, and `replaced_on_merge` the
+   * saved lines a guest cart replaced at sign-in.
+   */
   reason: string
   line_id: string | null
   variant_id: string | null
@@ -500,6 +504,11 @@ export interface Cart {
    */
   guest_token: string | null
   item_count: number
+  /**
+   * Marketplace: the one seller this cart buys from, read off its purchasable lines. `null` in a
+   * single shop and for an empty cart. Pass its `slug` to `fulfillment.pickupLocations()`.
+   */
+  vendor: VendorSummary | null
   subtotal: Money
   has_unpurchasable_lines: boolean
   lines: CartLine[]
@@ -639,6 +648,8 @@ export interface Address {
   area: AdministrativeAreaRef | null
   created_at: string | null
   updated_at: string | null
+  /** The marketplace seller the point belongs to; `null` in a single shop. */
+  vendor: VendorSummary | null
 }
 
 export type FulfillmentMethod = 'delivery' | 'pickup'
@@ -718,9 +729,19 @@ export type PaymentMethod = 'cod' | 'paymob' | (string & {})
 
 /** The customer an order or return belongs to, as embedded on those reads. */
 export interface CustomerRef {
-  id: string
+  /** `null` when a marketplace seller reads its own order: it sees who to ring, not who it is. */
+  id: string | null
   name: string
   phone: string
+}
+
+/** Where a pickup order is collected, as embedded on the order. */
+export interface OrderPickupLocation {
+  id: string
+  name_ar: string
+  name_en: string
+  address_line: string
+  contact_phone: string
 }
 
 export interface OrderTotals {
@@ -788,10 +809,13 @@ export interface OrderFulfillment {
   eta: DeliveryEstimate | null
 }
 
+/** One step of the order or of its fulfillment (packing, sent out, delivered), oldest first. */
 export interface OrderHistoryEntry {
   from_status: string | null
   to_status: string
   actor_type: string
+  /** The seller whose staff made the step. `null` for the customer, the system and the platform's own team. */
+  actor_vendor: VendorSummary | null
   reason: string | null
   occurred_at: string
 }
@@ -802,11 +826,15 @@ export interface Order {
   status: string
   placed_at: string
   customer: CustomerRef
+  /** The marketplace seller; `null` in a single shop. */
+  vendor: VendorSummary | null
   totals: OrderTotals
   fulfillment_method: FulfillmentMethod
   discount_allocations: OrderDiscountAllocation[]
   /** A frozen JSON snapshot of the delivery address; the contract does not pin its shape. */
   address: Record<string, unknown> | null
+  /** Where a pickup order is collected; `null` for a delivery. */
+  pickup_location: OrderPickupLocation | null
   /** A frozen JSON snapshot of the fulfillment quote; the contract does not pin its shape. */
   quote: Record<string, unknown>
   /** Never empty. An order is created from at least one cart line. */

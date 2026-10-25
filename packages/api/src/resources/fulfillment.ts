@@ -20,8 +20,9 @@ export interface FulfillmentNamespace {
    */
   quotes(input: FulfillmentQuoteInput): Promise<FulfillmentQuote>
   /** Active pickup locations. Not paginated. Requires a signed-in customer; a guest reads
-   * `guest.fulfillment.pickupLocations()`. */
-  pickupLocations(): Promise<PickupLocation[]>
+   * `guest.fulfillment.pickupLocations()`. In a marketplace pass the cart's seller slug
+   * (`cart.vendor.slug`): checkout takes only that seller's points. */
+  pickupLocations(vendorSlug?: string): Promise<PickupLocation[]>
 }
 
 export function createFulfillmentNamespace(transport: Transport): FulfillmentNamespace {
@@ -32,10 +33,11 @@ export function createFulfillmentNamespace(transport: Transport): FulfillmentNam
         path: '/customer/fulfillment/quotes',
         body: input,
       }),
-    pickupLocations: () =>
+    pickupLocations: (vendorSlug) =>
       transport.array<PickupLocation>({
         method: 'GET',
         path: '/customer/fulfillment/pickup-locations',
+        query: vendorSlug ? { vendor: vendorSlug } : null,
       }),
   }
 }

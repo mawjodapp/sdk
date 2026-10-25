@@ -1,5 +1,5 @@
 import { defaultCartTokenStorage, memoryCartTokenStorage } from '@mawjod/api'
-import { defineNuxtPlugin, useRequestHeaders } from '#imports'
+import { defineNuxtPlugin, useRequestHeaders, useRequestURL } from '#imports'
 
 import { createNuxtMawjodClient } from './create-client'
 import { useMawjodLocaleState, useMawjodPublicConfig, useStoreAvailabilityState } from './internal'
@@ -22,8 +22,13 @@ export default defineNuxtPlugin({
     // SSR has no cookie jar, so the incoming `cookie` header is the only carrier of the Sanctum
     // session and the `XSRF-TOKEN` the client echoes on writes. In the browser this is unnecessary:
     // `credentials: 'include'` already sends them.
+    //
+    // Sanctum reads that cookie only on a request whose `Referer` or `Origin` names a stateful
+    // domain, which a browser sends and a server render does not. Without it every SSR read is
+    // answered as signed out, so a refresh on a signed-in page bounced to the login page. The page's
+    // own origin is what the browser would have sent.
     const forwardHeaders = server
-      ? (useRequestHeaders(['cookie']) as Record<string, string>)
+      ? { ...(useRequestHeaders(['cookie']) as Record<string, string>), referer: `${useRequestURL().origin}/` }
       : undefined
 
     // A guest cart token written during SSR would be per-request and unreachable from the browser

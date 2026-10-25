@@ -7,6 +7,12 @@ export interface AddCartLineInput {
   quantity: number
   /** Reserved. Release 1 accepts only `{}`. */
   options?: Record<string, never>
+  /**
+   * Marketplace: a cart buys from one seller. Adding another seller's item answers 409
+   * `cart_vendor_mismatch`; send it again with `replace_cart: true` to empty the cart (and its
+   * coupon) first.
+   */
+  replace_cart?: boolean
 }
 
 export interface CartNamespace {
@@ -28,6 +34,9 @@ export interface CartNamespace {
   /**
    * Merges the guest cart into the signed-in customer's cart. Additive and deterministic:
    * identical lines sum, guest-only lines move across, replaying the same token merges once.
+   *
+   * In a marketplace a guest cart with lines replaces the saved one instead; each saved line it
+   * replaced comes back in `adjustments` as `replaced_on_merge`, so tell the shopper.
    *
    * Defaults to the stored guest token. On success the stored token is cleared, because the guest
    * cart is gone and replaying a dead token would be noise. Note the contract inconsistency: every

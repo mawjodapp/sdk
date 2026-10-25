@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import {
+  CartErrorCode,
   isMawjodApiError,
   MarketplaceSettingKey,
   VendorRegistration,
@@ -107,5 +108,39 @@ describe('seller page', () => {
     const failure = await client.marketplace.vendors.get('gone').catch((error: unknown) => error)
 
     expect(isMawjodApiError(failure) && failure.status).toBe(404)
+  })
+})
+
+describe('one-seller cart', () => {
+  it('lists only the cart seller pickup points when given its slug', async () => {
+    setCookieJar('XSRF-TOKEN=tok')
+    const { client, calls } = createHarness([{ status: 200, body: { data: [], meta: { request_id: 'req-pickup' } } }])
+
+    await client.fulfillment.pickupLocations('palm-store')
+    await client.fulfillment.pickupLocations()
+
+    expect(calls.map((call) => call.path)).toEqual([
+      '/api/v1/customer/fulfillment/pickup-locations?vendor=palm-store',
+      '/api/v1/customer/fulfillment/pickup-locations',
+    ])
+  })
+
+  it('names the seller already in the cart and can replace it', async () => {
+    setCookieJar('XSRF-TOKEN=tok')
+    const cartVendor = { id: 'v-1', slug: 'palm-store', name_ar: 'متجر النخيل', name_en: 'Palm Store' }
+    const { client, calls } = createHarness([
+      {
+        status: 409,
+        body: { status: 409, code: CartErrorCode.VendorMismatch, cart_vendor: cartVendor, request_id: 'req-409' },
+      },
+    ])
+
+    const refusal = await client.cart.addLine({ variant_id: 'var-b', quantity: 1 }).catch((error: unknown) => error)
+
+    expect(isMawjodApiError(refusal) && refusal.problem.code).toBe('cart_vendor_mismatch')
+    expect(isMawjodApiError(refusal) && refusal.problem.cart_vendor).toEqual(cartVendor)
+
+    await client.cart.addLine({ variant_id: 'var-b', quantity: 1, replace_cart: true }).catch(() => null)
+    expect(calls[1]?.body).toEqual({ variant_id: 'var-b', quantity: 1, replace_cart: true })
   })
 })

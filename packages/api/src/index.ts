@@ -16,6 +16,7 @@ export {
 export type { CartTokenStorage } from './cart-token.js'
 
 export {
+  CartErrorCode,
   isCheckoutError,
   isForbidden,
   isMawjodApiError,
@@ -27,6 +28,7 @@ export {
   isValidationError,
   MawjodApiError,
   MawjodNetworkError,
+  OrderTransitionErrorCode,
   PayloadIntegrityError,
 } from './errors.js'
 export type {
@@ -121,5 +123,6 @@ export type {
 } from './resources/marketplace.js'
 
 export { StoreMode } from './store-mode.js'
+export { CartAdjustmentReason } from './cart-adjustment.js'
 export { MarketplaceSettingKey, VendorRegistration, VendorStatus } from './vendor.js'
 export type * from './types.js'

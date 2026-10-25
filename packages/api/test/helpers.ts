@@ -131,6 +131,8 @@ export function orderPayload(overrides: Record<string, unknown> = {}): Record<st
     fulfillment_method: 'delivery',
     discount_allocations: [],
     address: null,
+    pickup_location: null,
+    vendor: null,
     quote: {},
     lines: [
       {
@@ -159,6 +161,7 @@ export function cartPayload(overrides: Record<string, unknown> = {}): Record<str
     is_guest: true,
     guest_token: null,
     item_count: 1,
+    vendor: null,
     subtotal: money(129900),
     has_unpurchasable_lines: false,
     lines: [],

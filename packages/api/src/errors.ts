@@ -1,3 +1,5 @@
+import type { VendorSummary } from './types.js'
+
 /**
  * Mawjod answers failures with `application/problem+json` (RFC 7807) and adds two fields the
  * client is expected to use: `code` and `request_id`.
@@ -21,6 +23,11 @@ export interface ProblemDocument {
   checks?: Record<string, boolean>
   /** Present on `insufficient_stock` (409): every short variant, not only the first. */
   variant_ids?: string[]
+  /**
+   * Present on `cart_vendor_mismatch` (409): the seller already in the cart, to name in the
+   * "empty your cart?" prompt.
+   */
+  cart_vendor?: VendorSummary | null
   [key: string]: unknown
 }
 
@@ -83,6 +90,32 @@ export type VendorSignupErrorCode =
   | 'vendor_email_unavailable'
 
 /**
+ * Cart refusals. In a marketplace a cart buys from one seller: `VendorMismatch` answers adding
+ * another seller's item; add it again with `replace_cart: true` to empty the cart first.
+ *
+ * Compare against these rather than spelling the strings: `error.code === CartErrorCode.VendorMismatch`.
+ */
+export const CartErrorCode = {
+  VendorMismatch: 'cart_vendor_mismatch',
+  NotPurchasable: 'variant_not_purchasable',
+  NotActive: 'cart_not_active',
+} as const
+
+export type CartErrorCode = (typeof CartErrorCode)[keyof typeof CartErrorCode]
+
+/**
+ * Staff order refusals. `OverrideReasonRequired` (422): platform staff moving a marketplace
+ * seller's order must say why.
+ */
+export const OrderTransitionErrorCode = {
+  NotAllowed: 'transition_not_allowed',
+  Terminal: 'transition_terminal',
+  OverrideReasonRequired: 'override_reason_required',
+} as const
+
+export type OrderTransitionErrorCode = (typeof OrderTransitionErrorCode)[keyof typeof OrderTransitionErrorCode]
+
+/**
  * Documented `code` values. Left open with `(string & {})` on purpose: the server may introduce a
  * new code at any time and a client that crashes on one is worse than a client that falls through
  * to a generic message.
@@ -98,7 +131,8 @@ export type MawjodErrorCode =
   | CheckoutErrorCode
   | WinCampaignErrorCode
   | VendorSignupErrorCode
-  | 'variant_not_purchasable'
+  | CartErrorCode
+  | OrderTransitionErrorCode
   | 'pricing_conflict'
   | 'outside_service_area'
   | 'identity_unavailable'

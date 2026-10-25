@@ -955,7 +955,7 @@ See [`returns`](/api/returns).
 ## `useFulfillment()`
 
 ```ts
-useFulfillment(options?: MawjodAsyncOptions): {
+useFulfillment(options?: UseFulfillmentOptions): {
   pickupLocations: ComputedRef<PickupLocation[]>
   pending: Ref<boolean>
   error: Ref<unknown>
@@ -968,6 +968,10 @@ useFulfillment(options?: MawjodAsyncOptions): {
 ```
 
 `/customer/fulfillment`, keyed `mawjod:fulfillment:pickup-locations`.
+
+`UseFulfillmentOptions` adds `vendor` to the usual async options: in a marketplace pass the cart's
+seller, `useFulfillment({ vendor: () => cart.value?.vendor?.slug })`, and only that seller's pickup
+points are listed. The list reloads when the seller changes.
 
 Pickup locations are page data and load on setup. A shipping quote is a `POST` that depends on the
 chosen address or pickup point, so it is invoked and its result lands on `lastQuote`.
