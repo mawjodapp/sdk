@@ -22,7 +22,7 @@ export interface UseProductSearchReturn {
  * `GET /search/products`.
  *
  * Search is a user action rather than page data, so this is invoked, not fetched on setup. Note the
- * endpoint's own contract: it takes flat params (`q`, `category_id`, `brand_id`,
+ * endpoint's own contract: it takes flat params (`q`, `category_id`, `brand_id`, `vendor`,
  * `min_price_minor`, `max_price_minor`, `page`, `per_page`) and rejects `filter[…]` entirely.
  */
 export function useProductSearch(initial: SearchProductsQuery = {}): UseProductSearchReturn {
