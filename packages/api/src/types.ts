@@ -52,9 +52,18 @@ export interface Paginated<T> {
   meta: PaginationMeta
 }
 
+/** The seller a `vendor_id` facet value stands for. */
+export interface SearchFacetVendor {
+  slug: string
+  name_ar: string
+  name_en: string
+}
+
 export interface SearchFacetValue {
   value: string
   count: number
+  /** Only on the `vendor_id` facet. */
+  vendor?: SearchFacetVendor
 }
 
 export interface SearchFacet {
