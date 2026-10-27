@@ -130,6 +130,7 @@ interface ProblemDocument {
   reason?: string                     // present on some 409s, e.g. pricing_conflict -> 'expired'
   checks?: Record<string, boolean>    // present on deployment_not_ready
   variant_ids?: string[]              // present on insufficient_stock: every short variant
+  cart_vendor?: VendorSummary | null  // present on cart_vendor_mismatch: the seller already in the cart
   [key: string]: unknown
 }
 ```
@@ -167,6 +168,24 @@ type WinCampaignErrorCode =
   | 'win_daily_limit_reached'
   | 'win_pool_empty'
 
+type VendorSignupErrorCode =
+  | 'vendor_registration_closed'
+  | 'vendor_signup_code_invalid'
+  | 'vendor_email_unavailable'
+
+// Constants as well as types: compare with `CartErrorCode.VendorMismatch`, not the string.
+const CartErrorCode = {
+  VendorMismatch: 'cart_vendor_mismatch',
+  NotPurchasable: 'variant_not_purchasable',
+  NotActive: 'cart_not_active',
+} as const
+
+const OrderTransitionErrorCode = {
+  NotAllowed: 'transition_not_allowed',
+  Terminal: 'transition_terminal',
+  OverrideReasonRequired: 'override_reason_required',
+} as const
+
 type MawjodErrorCode =
   | 'unauthenticated'
   | 'forbidden'
@@ -177,7 +196,9 @@ type MawjodErrorCode =
   | 'untrusted_host'
   | CheckoutErrorCode
   | WinCampaignErrorCode
-  | 'variant_not_purchasable'
+  | VendorSignupErrorCode
+  | CartErrorCode
+  | OrderTransitionErrorCode
   | 'pricing_conflict'
   | 'outside_service_area'
   | 'identity_unavailable'
@@ -213,6 +234,12 @@ reach a shopper. See [`store.settings()` → Guest checkout and sign-in by code]
 `WinCampaignErrorCode` is the win page's refusals. `win_code_not_accepted` covers a code that never
 existed and one already used, on purpose, so its message has to stay vague. See
 [`campaign` → Refusals](/api/campaign#refusals) for what a page says for each.
+
+`VendorSignupErrorCode` is a marketplace's seller signup refusals; see [`marketplace` → Refusals](/api/marketplace#refusals).
+
+`CartErrorCode.VendorMismatch` (409) is a marketplace cart refusing another seller's item; see
+[`cart.addLine()`](/api/cart#cart-addline). `OrderTransitionErrorCode.OverrideReasonRequired` (422) is
+a staff refusal: platform staff moving a marketplace seller's order must give a reason.
 
 `untrusted_host` is a `400` refused before the endpoint ran: the request's `Host` header is not in
 the deployment's `TRUSTED_HOSTS`. It is a deployment or proxy misconfiguration rather than anything

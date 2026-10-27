@@ -1,6 +1,23 @@
 import type { Transport } from '../http.js'
 import { guardSearchHits } from '../integrity.js'
-import type { SearchProductHit, SearchResults } from '../types.js'
+import type { SearchFacet, SearchMeta, SearchProductHit, SearchResults } from '../types.js'
+
+/**
+ * The fields `meta.facets` counts. `Vendor` comes back only in a marketplace, each value naming its
+ * seller in `vendor`. Compare against these rather than spelling the strings.
+ */
+export const SearchFacetField = {
+  Category: 'category_id',
+  Brand: 'brand_id',
+  Vendor: 'vendor_id',
+} as const
+
+export type SearchFacetField = (typeof SearchFacetField)[keyof typeof SearchFacetField]
+
+/** One facet out of a search's `meta`, or `null` when the search did not count it (the fallback never does). */
+export function searchFacet(meta: SearchMeta | null | undefined, field: SearchFacetField): SearchFacet | null {
+  return meta?.facets.find((facet) => facet.field === field) ?? null
+}
 
 /**
  * Search takes flat pagination and no `filter` at all.
@@ -14,6 +31,11 @@ export type SearchProductsQuery = {
   q?: string
   category_id?: string
   brand_id?: string
+  /**
+   * Marketplace only: one seller's slug. A slug naming no selling seller finds nothing; a single
+   * shop answers 422.
+   */
+  vendor?: string
   min_price_minor?: number
   max_price_minor?: number
   /** 1-100. */

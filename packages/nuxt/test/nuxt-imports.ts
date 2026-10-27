@@ -98,6 +98,11 @@ export function useRequestHeaders(keys: string[] = []): Record<string, string> {
   return picked
 }
 
+/** The page being rendered: the storefront's own origin, which the plugin sends as `Referer`. */
+export function useRequestURL(): URL {
+  return new URL('https://storefront.test/checkout')
+}
+
 export function defineNuxtPlugin<
   T extends { name?: string; setup: (nuxtApp: MockNuxtApp) => unknown },
 >(plugin: T): T['setup'] {

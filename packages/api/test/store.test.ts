@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { StoreMode } from '../src/index.js'
 import type { StoreInfo } from '../src/index.js'
 import { createHarness } from './helpers.js'
 
@@ -8,6 +9,7 @@ const base: Omit<StoreInfo, 'delivery_estimate'> = {
   status: 'active',
   name: 'Shop',
   default_locale: 'ar',
+  mode: StoreMode.Single,
   branding: { logo: null, icon: null },
 }
 

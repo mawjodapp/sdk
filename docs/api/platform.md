@@ -56,15 +56,19 @@ interface HealthReady {
     valkey: boolean
     meilisearch: boolean
     store: boolean
+    mode: boolean
   }
   details?: {
     store_id: string
     store_status: string
+    mode: StoreMode
   }
 }
 ```
 
-`details` is only present once the store context resolves.
+`details` is only present once the store context resolves. `checks.mode` is false when the
+deployment's `MAWJOD_MODE` and the backend release's composer.json name different modes, or
+either is missing; it does not depend on the store existing.
 
 A failing dependency answers `503 deployment_not_ready`. The problem document carries the same
 `checks` object, with a `false` entry for whatever is down, readable through `error.problem.checks`:

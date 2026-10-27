@@ -6,6 +6,9 @@
  * `name_ar`/`name_en` on cart lines) are real but absent from the Scribe examples.
  */
 
+import type { StoreMode } from './store-mode.js'
+import type { VendorStatus } from './vendor.js'
+
 /**
  * Money is always integer minor units plus a currency. Never a float: a float cannot represent a
  * piastre and the API never sends one.
@@ -49,9 +52,18 @@ export interface Paginated<T> {
   meta: PaginationMeta
 }
 
+/** The seller a `vendor_id` facet value stands for. */
+export interface SearchFacetVendor {
+  slug: string
+  name_ar: string
+  name_en: string
+}
+
 export interface SearchFacetValue {
   value: string
   count: number
+  /** Only on the `vendor_id` facet. */
+  vendor?: SearchFacetVendor
 }
 
 export interface SearchFacet {
@@ -84,6 +96,7 @@ export interface StoreInfo {
   /** Already localized by the server from `Accept-Language`. */
   name: string
   default_locale: StoreLocale
+  mode: StoreMode
   /**
    * The store's brand images, already resolved to urls. This is where a theme reads the logo:
    * `StoreSettings` carries the bare asset ids and resolves nothing.
@@ -137,6 +150,36 @@ export interface StoreSettingEntry {
  */
 export interface StoreSettings {
   settings: Record<string, StoreSettingEntry>
+}
+
+/** What `marketplace.vendorSignup.apply()` returns: the new vendor and where it stands. */
+export interface VendorApplication {
+  id: string
+  /** `pending` until an admin decides; `approved` at once when the marketplace approves on its own. */
+  status: VendorStatus
+}
+
+/**
+ * The seller beside a product or a search hit, in both languages. Link to the seller's page with
+ * `slug`. `null` on every product of a single shop.
+ */
+export interface VendorSummary {
+  id: string
+  slug: string
+  name_ar: string
+  name_en: string
+}
+
+/**
+ * `marketplace.vendors.get(slug)`: a seller's public page. Who they are and where, never how to
+ * reach them: contact and legal details stay with the marketplace.
+ */
+export interface PublicVendor extends VendorSummary {
+  about_ar: string | null
+  about_en: string | null
+  area: { id: string; name_ar: string; name_en: string }
+  /** The seller's logo, or `null` when they have none. */
+  logo: Image | null
 }
 
 /* -------------------------------------------------------------------------- */
@@ -200,6 +243,8 @@ export interface Category {
  */
 export interface CategoryListItem extends Category {
   image: Image | null
+  /** The category this one sits under; `null` at the top. Build the tree with `categoryTree`. */
+  parent_id: string | null
 }
 
 /** A brand as the storefront sees it: already resolved to one locale. */
@@ -238,6 +283,8 @@ export interface ProductSummary {
   name: string
   category: Category
   brand: Brand
+  /** Who sells it on a marketplace; `null` in a single shop. */
+  vendor: VendorSummary | null
   /** The cheapest variant's price. */
   from_price: Money
   /** The product's lead image, or `null` when it has none. */
@@ -322,6 +369,8 @@ export interface SearchProductHit {
   slug: string
   brand: SearchTaxonomyRef
   category: SearchTaxonomyRef
+  /** As on `ProductSummary`: who sells it, or `null` in a single shop. */
+  vendor: VendorSummary | null
   from_price: Money
   /**
    * The product's first public picture: the same `Image` the catalog returns, renditions included,
@@ -441,7 +490,11 @@ export interface CartLine {
 }
 
 export interface CartAdjustment {
-  /** e.g. `merged_quantity_summed`. */
+  /**
+   * One of `CartAdjustmentReason`, typed as a string so a newer reason never breaks this client.
+   * In a marketplace, `removed` lists the lines `replace_cart` emptied, and `replaced_on_merge` the
+   * saved lines a guest cart replaced at sign-in.
+   */
   reason: string
   line_id: string | null
   variant_id: string | null
@@ -460,6 +513,11 @@ export interface Cart {
    */
   guest_token: string | null
   item_count: number
+  /**
+   * Marketplace: the one seller this cart buys from, read off its purchasable lines. `null` in a
+   * single shop and for an empty cart. Pass its `slug` to `fulfillment.pickupLocations()`.
+   */
+  vendor: VendorSummary | null
   subtotal: Money
   has_unpurchasable_lines: boolean
   lines: CartLine[]
@@ -599,6 +657,8 @@ export interface Address {
   area: AdministrativeAreaRef | null
   created_at: string | null
   updated_at: string | null
+  /** The marketplace seller the point belongs to; `null` in a single shop. */
+  vendor: VendorSummary | null
 }
 
 export type FulfillmentMethod = 'delivery' | 'pickup'
@@ -678,9 +738,19 @@ export type PaymentMethod = 'cod' | 'paymob' | (string & {})
 
 /** The customer an order or return belongs to, as embedded on those reads. */
 export interface CustomerRef {
-  id: string
+  /** `null` when a marketplace seller reads its own order: it sees who to ring, not who it is. */
+  id: string | null
   name: string
   phone: string
+}
+
+/** Where a pickup order is collected, as embedded on the order. */
+export interface OrderPickupLocation {
+  id: string
+  name_ar: string
+  name_en: string
+  address_line: string
+  contact_phone: string
 }
 
 export interface OrderTotals {
@@ -748,10 +818,13 @@ export interface OrderFulfillment {
   eta: DeliveryEstimate | null
 }
 
+/** One step of the order or of its fulfillment (packing, sent out, delivered), oldest first. */
 export interface OrderHistoryEntry {
   from_status: string | null
   to_status: string
   actor_type: string
+  /** The seller whose staff made the step. `null` for the customer, the system and the platform's own team. */
+  actor_vendor: VendorSummary | null
   reason: string | null
   occurred_at: string
 }
@@ -762,11 +835,15 @@ export interface Order {
   status: string
   placed_at: string
   customer: CustomerRef
+  /** The marketplace seller; `null` in a single shop. */
+  vendor: VendorSummary | null
   totals: OrderTotals
   fulfillment_method: FulfillmentMethod
   discount_allocations: OrderDiscountAllocation[]
   /** A frozen JSON snapshot of the delivery address; the contract does not pin its shape. */
   address: Record<string, unknown> | null
+  /** Where a pickup order is collected; `null` for a delivery. */
+  pickup_location: OrderPickupLocation | null
   /** A frozen JSON snapshot of the fulfillment quote; the contract does not pin its shape. */
   quote: Record<string, unknown>
   /** Never empty. An order is created from at least one cart line. */
@@ -992,6 +1069,8 @@ export interface HealthChecks {
   valkey: boolean
   meilisearch: boolean
   store: boolean
+  /** False when `MAWJOD_MODE` and the backend's composer.json disagree, or either is missing. */
+  mode: boolean
 }
 
 export interface HealthReady {
@@ -1001,5 +1080,6 @@ export interface HealthReady {
   details?: {
     store_id: string
     store_status: string
+    mode: StoreMode
   }
 }

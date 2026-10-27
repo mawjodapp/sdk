@@ -105,7 +105,7 @@ const { data: store, pending, error } = await useStoreInfo()
 </template>
 ```
 
-`StoreInfo` is `{ id, status, name, default_locale, branding, delivery_estimate }`. `name` is
+`StoreInfo` is `{ id, status, name, default_locale, mode, branding, delivery_estimate }`. `name` is
 already localized by the server. `branding.logo` and `branding.icon` are resolved images, each
 `null` until the store uploads one, so bind the logo through `imageSrcSet()` and fall back to
 `name`. `delivery_estimate` is the delivery time to show before the shopper has an address, or
@@ -231,8 +231,8 @@ useCategories(
 `GET /catalog/categories`, keyed `mawjod:categories:<key>`. The query may be a ref or a getter; the
 list refetches when it changes.
 
-This is what a nav is built from. The list is flat: categories have no hierarchy, so there is
-nothing to nest.
+One page of categories. For a nav, which needs every category and their nesting, use
+[`useAllCategories()`](#useallcategories).
 
 ```vue
 <script setup lang="ts">
@@ -262,6 +262,25 @@ design. See [`catalog.categories.list`](/api/catalog#catalog-categories-list).
 category has no picture. Only the listing rows carry one. The `category` on a product summary is a
 plain `Category` and never does, which is why they are two types. See
 [`catalog` → Images](/api/catalog#images).
+
+## `useAllCategories()`
+
+```ts
+useAllCategories(options?: MawjodAsyncOptions)
+```
+
+Every listed category, all pages, keyed `mawjod:categories:all` so a header and a page share one
+read. `data` is `CategoryListItem[]`. Each row has a `parent_id`; build the tree with `categoryTree`
+and a breadcrumb with `categoryAncestors` from `@mawjod/api`.
+
+```vue
+<script setup lang="ts">
+import { categoryTree } from '@mawjod/api'
+
+const { data } = await useAllCategories({ dedupe: 'defer' })
+const topLevel = computed(() => categoryTree(data.value ?? []).map((node) => node.category))
+</script>
+```
 
 ## `useBrands()`
 
@@ -834,6 +853,26 @@ connection is answered `win_code_not_accepted` even when the first one won. Refu
 `error`; see [`campaign` → Refusals](/api/campaign#refusals) for the words to show, and keep the
 `win_code_not_accepted` message vague.
 
+## `useVendorSignup()`
+
+```ts
+useVendorSignup(): {
+  email: Ref<string | null>
+  application: Ref<VendorApplication | null>
+  pending: Ref<boolean>
+  error: Ref<unknown>
+  sendCode: (input: VendorSignupCodeInput) => Promise<void>
+  apply: (input: VendorSignupInput) => Promise<VendorApplication>
+  reset: () => void
+}
+```
+
+`/marketplace/vendor-signup`, in a marketplace while `marketplace.vendor_registration` is open.
+`sendCode()` sets `email`, so the page can move to the code-and-details step; `apply()` sets
+`application`, whose `status` says whether the business is waiting or already approved. `reset()`
+forgets both, for "use a different email". Refusals land in `error`; see
+[`marketplace` → Refusals](/api/marketplace#refusals).
+
 ## `useOrders()`
 
 ```ts
@@ -916,7 +955,7 @@ See [`returns`](/api/returns).
 ## `useFulfillment()`
 
 ```ts
-useFulfillment(options?: MawjodAsyncOptions): {
+useFulfillment(options?: UseFulfillmentOptions): {
   pickupLocations: ComputedRef<PickupLocation[]>
   pending: Ref<boolean>
   error: Ref<unknown>
@@ -929,6 +968,10 @@ useFulfillment(options?: MawjodAsyncOptions): {
 ```
 
 `/customer/fulfillment`, keyed `mawjod:fulfillment:pickup-locations`.
+
+`UseFulfillmentOptions` adds `vendor` to the usual async options: in a marketplace pass the cart's
+seller, `useFulfillment({ vendor: () => cart.value?.vendor?.slug })`, and only that seller's pickup
+points are listed. The list reloads when the seller changes.
 
 Pickup locations are page data and load on setup. A shipping quote is a `POST` that depends on the
 chosen address or pickup point, so it is invoked and its result lands on `lastQuote`.

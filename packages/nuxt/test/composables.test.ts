@@ -5,6 +5,7 @@ import { useCart } from '../src/runtime/composables/cart'
 import { useCustomerAuth } from '../src/runtime/composables/auth'
 import { useWinCampaign } from '../src/runtime/composables/campaign'
 import { useGuestCheckout } from '../src/runtime/composables/checkout'
+import { useVendorSignup } from '../src/runtime/composables/marketplace'
 import { cartFixture, customerFixture } from './helpers'
 import { nuxtHarness, resetNuxt } from './nuxt-imports'
 
@@ -40,6 +41,12 @@ function installFakes(options: {
       },
     },
     cart: { merge, addLine: vi.fn(async () => cartFixture(2)) },
+    marketplace: {
+      vendorSignup: {
+        sendCode: vi.fn(async () => undefined),
+        apply: vi.fn(async () => ({ id: 'v-1', status: 'pending' })),
+      },
+    },
   } as unknown as MawjodClient
 
   const harness = nuxtHarness()
@@ -158,5 +165,23 @@ describe('useWinCampaign', () => {
     expect(win.product.value?.name_en).toBe('Oil')
     expect(win.claimed.value).toBeNull()
     expect(win.error.value).toBeInstanceOf(Error)
+  })
+})
+
+describe('useVendorSignup', () => {
+  it('remembers the address the code went to, then the filed application, and reset starts over', async () => {
+    installFakes({})
+    const signup = useVendorSignup()
+
+    await signup.sendCode({ email: 'owner@niletextiles.example' })
+    expect(signup.email.value).toBe('owner@niletextiles.example')
+
+    const filed = await signup.apply({} as never)
+    expect(filed.status).toBe('pending')
+    expect(signup.application.value).toEqual({ id: 'v-1', status: 'pending' })
+
+    signup.reset()
+    expect(signup.email.value).toBeNull()
+    expect(signup.application.value).toBeNull()
   })
 })

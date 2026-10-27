@@ -16,6 +16,7 @@ export {
 export type { CartTokenStorage } from './cart-token.js'
 
 export {
+  CartErrorCode,
   isCheckoutError,
   isForbidden,
   isMawjodApiError,
@@ -27,6 +28,7 @@ export {
   isValidationError,
   MawjodApiError,
   MawjodNetworkError,
+  OrderTransitionErrorCode,
   PayloadIntegrityError,
 } from './errors.js'
 export type {
@@ -36,8 +38,12 @@ export type {
   PayloadIntegrityResource,
   ProblemDocument,
   StaleCartErrorCode,
+  VendorSignupErrorCode,
   WinCampaignErrorCode,
 } from './errors.js'
+
+export { categoryAncestors, categoryTree } from './category-tree.js'
+export type { CategoryNode, CategoryTreeItem } from './category-tree.js'
 
 export { imageSrcSet } from './images.js'
 export type { ImageSrcSet } from './images.js'
@@ -50,12 +56,14 @@ export type { FilterRange, FilterValue, PageValue, QueryInput, QueryScalar, Sort
 export type { HeadersOption } from './http.js'
 
 export type { StoreNamespace } from './resources/store.js'
+export { CATEGORY_PAGE_LIMIT } from './resources/catalog.js'
 export type {
   CatalogNamespace,
   CatalogProductsQuery,
   CatalogTaxonomyQuery,
 } from './resources/catalog.js'
 export type { SearchNamespace, SearchProductsQuery } from './resources/search.js'
+export { SearchFacetField, searchFacet } from './resources/search.js'
 export type { ContentNamespace } from './resources/content.js'
 export type { AddCartLineInput, CartNamespace } from './resources/cart.js'
 export type {
@@ -109,5 +117,13 @@ export type {
 export type { CampaignNamespace, WinClaimInput, WinCodeInput } from './resources/campaign.js'
 export type { PricingNamespace, ProductPricesInput } from './resources/pricing.js'
 export type { PlatformNamespace } from './resources/platform.js'
+export type {
+  MarketplaceNamespace,
+  VendorSignupCodeInput,
+  VendorSignupInput,
+} from './resources/marketplace.js'
 
+export { StoreMode } from './store-mode.js'
+export { CartAdjustmentReason } from './cart-adjustment.js'
+export { MarketplaceSettingKey, VendorRegistration, VendorStatus } from './vendor.js'
 export type * from './types.js'

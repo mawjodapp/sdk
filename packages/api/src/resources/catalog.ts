@@ -8,17 +8,22 @@ import type {
   ProductSummary,
 } from '../types.js'
 
+/** The most pages `catalog.categories.all()` reads: 2,000 categories. */
+export const CATEGORY_PAGE_LIMIT = 20
+
 export type CatalogProductsQuery = {
   page?: { number?: number | null; size?: number | null }
   /** `published_at` or `created_at`, optionally `-` prefixed. */
   sort?: SortValue
   /**
-   * Only `category` and `brand` are accepted, both by slug. A slug does not vary by locale, so the
-   * same value narrows the list under `ar` and `en`. Any other key is a 422.
+   * Only `category`, `brand` and `vendor` are accepted, all by slug. A slug does not vary by
+   * locale, so the same value narrows the list under `ar` and `en`. Any other key is a 422.
+   * `vendor` lists one seller's products on a marketplace; a single shop has none to match.
    */
   filter?: {
     category?: string | null
     brand?: string | null
+    vendor?: string | null
   }
 }
 
@@ -55,6 +60,12 @@ export interface CatalogNamespace {
      * one; the `category` embedded in a product summary does not.
      */
     list(query?: CatalogTaxonomyQuery): Promise<Paginated<CategoryListItem>>
+    /**
+     * Every listed category, read page by page, in the server's order. For a navigation, which
+     * needs the whole tree: pass the result to `categoryTree`. Stops after `CATEGORY_PAGE_LIMIT`
+     * pages of 100, so a runaway listing cannot hang a render.
+     */
+    all(): Promise<CategoryListItem[]>
   }
   brands: {
     /** Every brand with at least one visible product. Same rules as `categories.list`. */
@@ -76,6 +87,22 @@ export function createCatalogNamespace(transport: Transport): CatalogNamespace {
     categories: {
       list: (query) =>
         transport.list<CategoryListItem>({ method: 'GET', path: '/catalog/categories', query }),
+      all: async () => {
+        const rows: CategoryListItem[] = []
+
+        for (let number = 1; number <= CATEGORY_PAGE_LIMIT; number += 1) {
+          const page = await transport.list<CategoryListItem>({
+            method: 'GET',
+            path: '/catalog/categories',
+            query: { page: { number, size: 100 }, sort: 'created_at' },
+          })
+          rows.push(...page.data)
+          // An empty page ends it too: a list that shrank mid-walk would otherwise read to the cap.
+          if (page.data.length === 0 || page.meta.current_page >= page.meta.last_page) break
+        }
+
+        return rows
+      },
     },
     brands: {
       list: (query) =>
