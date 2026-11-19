@@ -43,6 +43,19 @@ describe('content', () => {
               link_url: 'https://shop.test/sale',
               image: image(),
               mobile_image: null,
+              ends_at: null,
+              show_countdown: false,
+            },
+            // A text strip counting down: no picture, an end, and the countdown on.
+            {
+              id: 'banner-2',
+              location: 'announcement',
+              title: 'Black Friday',
+              link_url: null,
+              image: null,
+              mobile_image: null,
+              ends_at: '2026-11-28T22:00:00+00:00',
+              show_countdown: true,
             },
           ],
           meta: { request_id: 'req-banners' },
@@ -75,9 +88,33 @@ describe('content', () => {
 
     // The location key, not an index: only one banner per location comes back, and a location with
     // no active banner is absent rather than null.
-    expect(banners.map((banner) => banner.location)).toEqual(['home_top'])
+    expect(banners.map((banner) => banner.location)).toEqual(['home_top', 'announcement'])
+    expect(banners[1]!.image).toBeNull()
+    expect(banners[1]!.show_countdown).toBe(true)
+    expect(Date.parse(banners[1]!.ends_at!)).toBe(Date.UTC(2026, 10, 28, 22))
 
     // A fresh store has no slider. An empty array is the answer, not a 404.
     expect(fresh).toEqual([])
+  })
+
+  it('reads the reviews the store chose to show, in its order', async () => {
+    const { client, calls } = createHarness([
+      {
+        status: 200,
+        body: {
+          data: [
+            { id: 'review-1', author_name: 'سارة م.', rating: 5, body: 'أنقى زيت جربته.' },
+            { id: 'review-2', author_name: 'Omar K.', rating: 4, body: 'Arrived in two days.' },
+          ],
+          meta: { request_id: 'req-reviews' },
+        },
+      },
+    ])
+
+    const reviews = await client.content.reviews()
+
+    expect(calls.map((call) => call.path)).toEqual(['/api/v1/content/reviews'])
+    expect(reviews.map((review) => review.id)).toEqual(['review-1', 'review-2'])
+    expect(reviews[0]!.rating).toBe(5)
   })
 })

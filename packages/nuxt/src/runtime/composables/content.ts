@@ -1,4 +1,4 @@
-import type { Banner, Slide } from '@mawjod/api'
+import type { Banner, Review, Slide } from '@mawjod/api'
 import { useAsyncData } from '#imports'
 
 import type { MawjodAsyncData, MawjodAsyncOptions } from '../types'
@@ -27,4 +27,16 @@ export function useBanners(options: MawjodAsyncOptions = {}): MawjodAsyncData<Ba
   const api = useMawjodApi()
 
   return useAsyncData<Banner[]>('mawjod:content:banners', () => api.content.banners(), options)
+}
+
+/**
+ * `GET /content/reviews`.
+ *
+ * The reviews the store chose to show, already in its order. Often empty, so render the section
+ * conditionally.
+ */
+export function useReviews(options: MawjodAsyncOptions = {}): MawjodAsyncData<Review[]> {
+  const api = useMawjodApi()
+
+  return useAsyncData<Review[]>('mawjod:content:reviews', () => api.content.reviews(), options)
 }

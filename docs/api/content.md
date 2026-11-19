@@ -1,15 +1,16 @@
 # `content`
 
-The merchandising surface a theme renders around the catalog: the hero slider and the banners the
-store has placed. Both calls are public, with the same middleware as the catalog, so a guest sees
-them without any session.
+The merchandising surface a theme renders around the catalog: the hero slider, the banners the
+store has placed, and the reviews it has chosen to show. All three calls are public, with the same
+middleware as the catalog, so a guest sees them without any session.
 
 ```ts
 mawjod.content.slider()
 mawjod.content.banners()
+mawjod.content.reviews()
 ```
 
-Both return bare arrays. Neither is paginated, and neither takes a query.
+All three return bare arrays. None is paginated, and none takes a query.
 
 `title` is localized by `Accept-Language`, the same as a catalog name: ask for `ar` and you get the
 Arabic caption, ask for `en` and you get the English one. A caption the store filled in only one
@@ -40,7 +41,8 @@ const slides = await mawjod.content.slider()
 
 `mobile_image` is the tall picture for phones: the stored asset at position 1 in the slide's media,
 or `null` when no picture sits there. Position decides, not upload order. `image` is the asset at
-position 0, and a slide or banner goes live only with a picture in that slot. A wide slide on a
+position 0, and a slide goes live only with a picture in that slot (a banner may go live with a
+title instead; see below). A wide slide on a
 phone is a strip nobody can read, so a theme that has a tall picture should use it below its tablet
 breakpoint and fall back to `image` otherwise:
 
@@ -70,6 +72,8 @@ interface Banner {
   link_url: string | null
   image: Image | null
   mobile_image: Image | null
+  ends_at: string | null
+  show_countdown: boolean
 }
 ```
 
@@ -90,10 +94,49 @@ dashboard offers those keys as a list and the API refuses a location under any o
 through `store.settings()` if your theme wants to check the store was set up for it; a store that
 never declared any answers `[]` and accepts any key, which is how every store begins.
 
+### Text banners and countdowns
+
+A banner goes live with a picture at position 0 or with a title. One with a title and `image: null`
+is a text strip: render the title on your own ground rather than skipping the row.
+
+`ends_at` is when the banner stops showing, ISO 8601, or `null` for one that stays up until the
+store switches it off. The API drops a banner from the array once `ends_at` passes, with no change
+needed on the store's side. `show_countdown` asks the theme to count down to `ends_at`, and is only
+ever `true` when `ends_at` is set. A countdown that reaches zero should take the banner down itself:
+the array the page loaded still has it until the next read.
+
+```ts
+const strip = banners.find((banner) => banner.location === 'announcement') ?? null
+const left = strip?.show_countdown ? Date.parse(strip.ends_at!) - Date.now() : null
+```
+
+Count against the visitor's clock, from the server's `ends_at`; there is nothing to sync.
+
+## `content.reviews()`
+
+```ts
+reviews(): Promise<Review[]>
+```
+
+`GET /api/v1/content/reviews`. The reviews the store has typed in and left showing, in the order it
+arranged them.
+
+```ts
+interface Review {
+  id: string
+  author_name: string
+  rating: 1 | 2 | 3 | 4 | 5
+  body: string
+}
+```
+
+`body` is shown as it was written whatever the `Accept-Language`, because a quote is not
+translated. Set `dir="auto"` on it if your store carries reviews in both languages.
+
 ## Empty is the normal state
 
 A store that has not built a slider answers `{ "data": [] }`, and a store with no active banners
-answers the same. That is a fresh store, not a failure and not a 404.
+or no reviews answers the same. That is a fresh store, not a failure and not a 404.
 
 Render both conditionally. A hero region that reserves its height before the array arrives leaves a
 hole on every store that never fills it.
@@ -130,7 +173,8 @@ There is no `404` and no empty-state error. See [Errors](/api/errors).
 ```ts
 const { data: slides } = await useSlider()
 const { data: banners } = await useBanners()
+const { data: reviews } = await useReviews()
 ```
 
-Both wrap `useAsyncData` and run during SSR. See
+All three wrap `useAsyncData` and run during SSR. See
 [Composables → useSlider](/nuxt/composables#useslider).

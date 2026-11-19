@@ -434,7 +434,19 @@ const homeTop = computed(() => banners.value?.find((banner) => banner.location =
 render nothing when the lookup misses: a location with no active banner is absent from the array
 rather than present and empty.
 
+`ends_at` and `show_countdown` carry a countdown; see
+[Text banners and countdowns](/api/content#text-banners-and-countdowns).
+
 See [`content`](/api/content) for both shapes.
+
+## `useReviews()`
+
+```ts
+useReviews(options?: MawjodAsyncOptions)
+```
+
+`GET /content/reviews`, keyed `mawjod:content:reviews`. The reviews the store chose to show, in its
+order. `data` is `Review[]`, often empty, so render the section with `v-if`.
 
 ## `useCart()`
 

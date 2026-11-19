@@ -1,5 +1,5 @@
 import type { Transport } from '../http.js'
-import type { Banner, Slide } from '../types.js'
+import type { Banner, Review, Slide } from '../types.js'
 
 export interface ContentNamespace {
   /**
@@ -18,11 +18,17 @@ export interface ContentNamespace {
    * banner, so look a location up by key and render nothing when it is missing.
    */
   banners(): Promise<Banner[]>
+  /**
+   * The reviews the store has chosen to show, in its order. Not paginated, and public. An empty
+   * array is a store that has added none.
+   */
+  reviews(): Promise<Review[]>
 }
 
 export function createContentNamespace(transport: Transport): ContentNamespace {
   return {
     slider: () => transport.array<Slide>({ method: 'GET', path: '/content/slider' }),
     banners: () => transport.array<Banner>({ method: 'GET', path: '/content/banners' }),
+    reviews: () => transport.array<Review>({ method: 'GET', path: '/content/reviews' }),
   }
 }

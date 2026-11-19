@@ -449,9 +449,33 @@ export interface Banner {
   location: string
   title: string | null
   link_url: string | null
+  /**
+   * `null` on a banner that carries only a title, which a theme shows as a text strip. A banner
+   * goes live with a picture at position 0 or a title, never with neither.
+   */
   image: Image | null
   /** As on `Slide`: the tall picture for phones, or `null`. */
   mobile_image: Image | null
+  /**
+   * ISO 8601. The banner leaves the array once this passes, so a countdown that reaches zero should
+   * take the banner down itself rather than wait for the next read. `null` stays up until the store
+   * switches it off.
+   */
+  ends_at: string | null
+  /** Count down to `ends_at`. Only ever `true` when `ends_at` is set. */
+  show_countdown: boolean
+}
+
+/**
+ * A customer's words the store chose to show, typed in by staff. `body` is shown as written,
+ * whatever the request language: a quote is not translated.
+ */
+export interface Review {
+  id: string
+  author_name: string
+  /** Whole stars, 1 to 5. */
+  rating: 1 | 2 | 3 | 4 | 5
+  body: string
 }
 
 /* -------------------------------------------------------------------------- */
